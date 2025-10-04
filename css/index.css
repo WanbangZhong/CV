@@ -536,6 +536,8 @@ blockquote p {
   width: 100%;
   max-width: 110px;
   border-radius: 50%;
+  filter: none !important;
+  opacity: 1 !important;
 }
 .author-discrip {
   display: table-cell;
@@ -733,6 +735,8 @@ blockquote p {
   .author-avatar img {
     padding: 5px;
     border: 1px solid #f2f3f3;
+    filter: none !important;
+    opacity: 1 !important;
   }
   .author-discrip {
     display: block;
