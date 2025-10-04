@@ -61,6 +61,25 @@ $(function () {
         });
     });
 
+    // ========== 文章卡片初始化函数 ==========
+    function initArticleCards() {
+        var container = document.getElementById('article-grid-container');
+        if (!container) return;
+        
+        // 如果已经排序过，先移除标记（允许 PJAX 后重新排序）
+        var cards = Array.from(container.children);
+        if (cards.length === 0) return;
+        
+        // 按时间排序（最新在前）
+        cards.sort(function(a, b) {
+            return new Date(b.dataset.time) - new Date(a.dataset.time);
+        });
+        
+        cards.forEach(function(card) {
+            container.appendChild(card);
+        });
+    }
+
     // pjax
     $(document).pjax('a[target!=_blank]','.page', {
         fragment: '.page',
@@ -82,6 +101,9 @@ $(function () {
             if ($(".nav").hasClass("nav-open")) {
                 $(".nav").removeClass("nav-open").addClass("nav-close")
             }
+            
+            // ========== PJAX 加载完成后初始化卡片 ==========
+            setTimeout(initArticleCards, 100);
         }
     });
 
@@ -100,5 +122,8 @@ $(function () {
             }
         });
     });
+
+    // ========== 页面首次加载时初始化卡片 ==========
+    initArticleCards();
 
 })
