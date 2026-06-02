@@ -290,6 +290,7 @@ blockquote p {
   margin: 0 1.6rem;
   padding: 0.8rem 0;
   color: #7a8288;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-weight: 600;
   text-decoration: none;
   -webkit-transition: all 0.2s ease-in-out;
@@ -343,7 +344,10 @@ blockquote p {
   .menus_items li a {
     display: block;
     color: #7a8288;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
     font-size: 1.6rem;
+    font-weight: 400;
+    letter-spacing: 0;
     margin: 0px;
     padding: 8px 15px;
     text-decoration: none;
@@ -398,6 +402,9 @@ blockquote p {
     margin: 0 1.6rem;
     padding: 0.8rem 0;
     color: #7a8288;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
     text-decoration: none;
   }
   .menus_items li a::before {
@@ -936,11 +943,16 @@ blockquote p {
 }
 .footer-reward-button i {
   font-size: 1.8em;
+  color: currentColor;
 }
 .footer-reward-button:hover {
   border-color: #9ba1a6;
   color: #000;
   background: rgba(255,255,255,0.85);
+}
+.footer-reward-button[aria-label="weixin"],
+.footer-reward-button[aria-label="alipay"] {
+  color: #4f565c;
 }
 .reward-modal {
   position: fixed;
@@ -1021,13 +1033,18 @@ blockquote p {
   padding: 14px;
   border: 1px solid #e3e5e7;
   border-radius: 8px;
-  background: #f8f9f9;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.96);
 }
 .reward-qr {
   display: block;
   max-width: 100%;
   max-height: 280px;
   object-fit: contain;
+  background: #fff;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal;
 }
 .reward-qr.is-missing {
   display: none;
@@ -1046,6 +1063,45 @@ blockquote p {
   color: #747b80;
   font-size: 1.35rem;
   font-weight: 650;
+}
+html[data-theme='dark'] .footer-reward-button {
+  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+  opacity: 1;
+}
+html[data-theme='dark'] .footer-reward-button:hover {
+  border-color: rgba(255,255,255,0.72);
+  background: #fff;
+  transform: translateY(-1px);
+}
+html[data-theme='dark'] .footer-reward-button[aria-label="weixin"],
+html[data-theme='dark'] .footer-reward-button[aria-label="alipay"] {
+  color: #2c3034;
+}
+html[data-theme='dark'] .reward-dialog {
+  border-color: rgba(255,255,255,0.18);
+  background: #fff;
+  color: #1d1d1f;
+}
+html[data-theme='dark'] .reward-title {
+  color: #1d1d1f;
+}
+html[data-theme='dark'] .reward-description,
+html[data-theme='dark'] .reward-method,
+html[data-theme='dark'] .reward-missing {
+  color: #6e6e73;
+}
+html[data-theme='dark'] .reward-close {
+  color: #6e6e73;
+}
+html[data-theme='dark'] .reward-close:hover {
+  color: #1d1d1f;
+  background: #f2f3f3;
+}
+html[data-theme='dark'] .reward-qr-wrap {
+  border-color: #e3e5e7;
+  background: #fff;
 }
 @media (min-width: 66.67em) {
   .footer_wrap {
@@ -1170,7 +1226,10 @@ blockquote p {
 .nav_items li a {
   display: block;
   color: #7a8288;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0;
   margin: 0px;
   padding: 10px 20px;
   text-decoration: none;
@@ -1275,6 +1334,7 @@ body {
 }
 #blog_name a {
   color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
 }
 .menus_items {
   flex: 1;
@@ -1297,7 +1357,7 @@ body {
   position: relative;
 }
 .submenu-toggle {
-  display: none;
+  display: none !important;
 }
 .category-submenu,
 .project-submenu {
@@ -1347,8 +1407,10 @@ body {
   border-radius: 12px;
   color: #1d1d1f !important;
   color: var(--text-primary, #1d1d1f) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   font-size: 1.45rem;
-  font-weight: 650;
+  font-weight: 400;
+  letter-spacing: 0;
   text-decoration: none;
   transition: background-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
 }
@@ -1381,25 +1443,20 @@ body {
   pointer-events: auto;
   transform: translate(-50%, 0) scale(1);
 }
-.has-submenu > .site-page::after {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 8px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform 0.18s ease;
-}
+.has-submenu > .site-page::after,
 .has-submenu:hover > .site-page::after,
 .has-submenu:focus-within > .site-page::after,
 .has-submenu.submenu-open > .site-page::after {
-  transform: rotate(225deg) translate(-1px, -1px);
+  content: none !important;
+  display: none !important;
 }
 @media (min-width: 34em) {
+  .submenu-toggle {
+    display: none !important;
+  }
   .menus_items li a {
     color: var(--text-secondary);
+    font-size: 1.45rem;
     border-radius: 999px;
     padding-left: 1rem;
     padding-right: 1rem;
@@ -1660,6 +1717,16 @@ mark {
   .menus_items li a {
     color: var(--text-primary);
   }
+  .submenu-toggle {
+    display: inline-flex !important;
+  }
+  .has-submenu > .site-page::after,
+  .has-submenu:hover > .site-page::after,
+  .has-submenu:focus-within > .site-page::after,
+  .has-submenu.submenu-open > .site-page::after {
+    content: none !important;
+    display: none !important;
+  }
   .menus_items .category-submenu,
   .menus_items .project-submenu {
     display: none;
@@ -1737,8 +1804,9 @@ body {
   box-shadow: 0 1px 0 var(--line), 0 12px 36px rgba(0,0,0,0.04);
 }
 #site-name {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-weight: 760;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 500;
   letter-spacing: 0;
 }
 .page {
@@ -1991,7 +2059,7 @@ body {
 .article-card .title {
   margin: 2.6rem 0 0.8rem;
   color: var(--text-primary);
-  font-size: clamp(2.2rem, 3vw, 3.5rem);
+  font-size: clamp(1.9rem, 2.45vw, 2.9rem);
   line-height: 1.06;
   font-weight: 780;
 }
@@ -2405,7 +2473,7 @@ html[data-theme='dark'] .tone-amber {
     padding: 12px 48px 12px 14px;
     border-radius: 14px;
     color: var(--text-primary);
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     text-decoration: none;
   }
   .menus_items li a::before {
@@ -2419,7 +2487,7 @@ html[data-theme='dark'] .tone-amber {
     position: absolute;
     top: 6px;
     right: 8px;
-    display: inline-flex;
+    display: none !important;
     align-items: center;
     justify-content: center;
     width: 36px;
@@ -2524,6 +2592,18 @@ html[data-theme='dark'] .tone-amber {
     line-height: 38px;
   }
 }
+@media (max-width: 34em) {
+  .submenu-toggle {
+    display: inline-flex !important;
+  }
+  .has-submenu > .site-page::after,
+  .has-submenu:hover > .site-page::after,
+  .has-submenu:focus-within > .site-page::after,
+  .has-submenu.submenu-open > .site-page::after {
+    content: none !important;
+    display: none !important;
+  }
+}
 @media (max-width: 544px) {
   body {
     font-size: 1.6em;
@@ -2539,6 +2619,7 @@ html[data-theme='dark'] .tone-amber {
   }
   #blog_name a {
     max-width: 38vw;
+    font-size: 1.7rem;
   }
   .header_tool,
   .menus_icon {
@@ -2662,7 +2743,7 @@ html[data-theme='dark'] .tone-amber {
   }
   .article-card .title {
     margin: 1.8rem 0 0.7rem;
-    font-size: 2rem;
+    font-size: 1.8rem;
     line-height: 1.12;
   }
   .article-card .summary {
@@ -2737,6 +2818,15 @@ html[data-theme='dark'] .tone-amber {
   font-family: "Times New Roman", FangSong, STFangsong, sans-serif;
   font-weight: 700;
 }
+.academic-style #site-name,
+.academic-style .menus_items li a,
+.academic-style .nav_items a,
+.academic-style .category-submenu a,
+.academic-style .project-submenu a {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
 .academic-style .header_tool {
   border: 1px solid var(--line);
   color: var(--text-primary);
@@ -2782,7 +2872,7 @@ html[data-theme='dark'] .tone-amber {
 .academic-style .nav_items a {
   border-radius: 3px;
   color: var(--text-primary) !important;
-  font-weight: 600;
+  font-weight: 400;
 }
 .academic-style .category-submenu a:hover,
 .academic-style .project-submenu a:hover,
@@ -2917,7 +3007,7 @@ html[data-theme='dark'] .tone-amber {
 .academic-style .article-card .title {
   color: var(--text-primary);
   font-family: "Times New Roman", FangSong, STFangsong, sans-serif;
-  font-size: clamp(2rem, 2.4vw, 2.8rem);
+  font-size: clamp(1.8rem, 2vw, 2.4rem);
   font-weight: 700;
 }
 .academic-style .tone-blue,
