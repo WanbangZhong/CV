@@ -1365,15 +1365,17 @@ body {
   top: calc(100% + 4px);
   left: 50%;
   z-index: 1000;
+  width: max-content;
   min-width: 168px;
+  max-width: 280px;
   margin: 0;
   padding: 8px;
   list-style: none;
   border: 1px solid rgba(0,0,0,0.08);
   border: 1px solid var(--line, rgba(0,0,0,0.08));
   border-radius: 18px;
-  background: rgba(255,255,255,0.94);
-  background: var(--surface, rgba(255,255,255,0.94));
+  background: rgba(255,255,255,0.98);
+  background: var(--surface, rgba(255,255,255,0.98));
   box-shadow: 0 18px 50px rgba(0,0,0,0.08);
   box-shadow: var(--shadow, 0 18px 50px rgba(0,0,0,0.08));
   backdrop-filter: saturate(180%) blur(22px);
@@ -1383,6 +1385,7 @@ body {
   pointer-events: none;
   transform: translate(-50%, 10px) scale(0.98);
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  overflow-wrap: normal;
 }
 .category-submenu::before,
 .project-submenu::before {
@@ -1408,10 +1411,11 @@ body {
   color: #1d1d1f !important;
   color: var(--text-primary, #1d1d1f) !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  font-size: 1.45rem;
+  font-size: 1.2rem;
   font-weight: 400;
   letter-spacing: 0;
   text-decoration: none;
+  white-space: nowrap;
   transition: background-color 0.18s ease, transform 0.18s ease, color 0.18s ease;
 }
 .category-submenu a::before,
@@ -1731,7 +1735,9 @@ mark {
   .menus_items .project-submenu {
     display: none;
     position: static;
+    width: auto;
     min-width: 0;
+    max-width: none;
     margin: 4px 0 8px 10px;
     padding: 4px;
     border-radius: 12px;
@@ -1742,6 +1748,10 @@ mark {
   .menus_items .category-submenu::before,
   .menus_items .project-submenu::before {
     content: none;
+  }
+  .menus_items .category-submenu a,
+  .menus_items .project-submenu a {
+    white-space: normal;
   }
   .menus-open .menus_items .has-submenu.submenu-open > .category-submenu,
   .menus-open .menus_items .has-submenu.submenu-open > .project-submenu {
@@ -2515,7 +2525,9 @@ html[data-theme='dark'] .tone-amber {
   .menus_items .project-submenu {
     display: none;
     position: static;
+    width: auto;
     min-width: 0;
+    max-width: none;
     margin: 0 0 10px 12px;
     padding: 4px;
     border: 0;
@@ -2534,6 +2546,7 @@ html[data-theme='dark'] .tone-amber {
   .menus_items .project-submenu a {
     padding: 9px 12px !important;
     font-size: 1.4rem;
+    white-space: normal;
     font-weight: 650;
   }
   .menus_items .category-submenu a::after,
