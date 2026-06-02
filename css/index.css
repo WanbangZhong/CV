@@ -1296,6 +1296,9 @@ body {
 .has-submenu {
   position: relative;
 }
+.submenu-toggle {
+  display: none;
+}
 .category-submenu,
 .project-submenu {
   position: absolute;
@@ -1659,14 +1662,12 @@ mark {
   }
   .menus_items .category-submenu,
   .menus_items .project-submenu {
+    display: none;
     position: static;
     min-width: 0;
     margin: 4px 0 8px 10px;
     padding: 4px;
     border-radius: 12px;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
     transform: none;
     box-shadow: none;
     background: var(--surface-soft);
@@ -1674,6 +1675,13 @@ mark {
   .menus_items .category-submenu::before,
   .menus_items .project-submenu::before {
     content: none;
+  }
+  .menus-open .menus_items .has-submenu.submenu-open > .category-submenu,
+  .menus-open .menus_items .has-submenu.submenu-open > .project-submenu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
   .header_wrap:not(.menus-open) .menus_items,
   .header_wrap:not(.menus-open) .menus_items * {
@@ -2394,7 +2402,7 @@ html[data-theme='dark'] .tone-amber {
     align-items: center;
     justify-content: space-between;
     margin: 0;
-    padding: 12px 14px;
+    padding: 12px 48px 12px 14px;
     border-radius: 14px;
     color: var(--text-primary);
     font-size: 1.6rem;
@@ -2407,17 +2415,43 @@ html[data-theme='dark'] .tone-amber {
     background: var(--surface-soft);
     transform: none;
   }
+  .submenu-toggle {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  }
+  .submenu-toggle:hover {
+    color: var(--text-primary);
+    background: var(--surface-soft);
+  }
+  .submenu-toggle i {
+    font-size: 1.2rem;
+    transition: transform 0.18s ease;
+  }
+  .has-submenu.submenu-open > .submenu-toggle i {
+    transform: rotate(180deg);
+  }
   .menus_items .category-submenu,
   .menus_items .project-submenu {
+    display: none;
     position: static;
     min-width: 0;
     margin: 0 0 10px 12px;
     padding: 4px;
     border: 0;
     border-radius: 14px;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
     transform: none !important;
     box-shadow: none;
     background: var(--surface-soft);
@@ -2438,6 +2472,13 @@ html[data-theme='dark'] .tone-amber {
   .menus_items .project-submenu a::after {
     content: none;
   }
+  .menus-open .menus_items .has-submenu.submenu-open > .category-submenu,
+  .menus-open .menus_items .has-submenu.submenu-open > .project-submenu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
   .header_wrap:not(.menus-open) .menus_items,
   .header_wrap:not(.menus-open) .menus_items * {
     pointer-events: none !important;
@@ -2449,12 +2490,12 @@ html[data-theme='dark'] .tone-amber {
     opacity: 0 !important;
   }
   .has-submenu > .site-page::after {
-    transform: rotate(45deg) translateY(-2px);
+    display: none;
   }
   .has-submenu:hover > .site-page::after,
   .has-submenu:focus-within > .site-page::after,
   .has-submenu.submenu-open > .site-page::after {
-    transform: rotate(45deg) translateY(-2px);
+    display: none;
   }
   .search-panel {
     padding: 9vh 14px 14px;
