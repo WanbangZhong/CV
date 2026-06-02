@@ -1,0 +1,26 @@
+.header_wrap
+    #blog_name
+        a#site-name.blog_title(href=url_for('/')) #[=config.title]
+    button.menus_icon
+        .navicon
+    ul.menus_items
+        each value, label in theme.menu
+            if !Array.isArray(value)
+                li.menus_item(class=(label === 'Projects' ? 'has-submenu' : ''))
+                    a.site-page(href=url_for(trim(value.split('||')[0])))=' ' + label
+                    if label === 'Projects'
+                        ul.project-submenu
+                            li
+                                a(href=url_for('/projects/#ann')) ANN
+                            li
+                                a(href=url_for('/projects/#pnn')) PNN
+                            li
+                                a(href=url_for('/projects/#fdtd')) FDTD
+            else
+                li.menus_item
+                    a.site-page=' ' + trim(label.split('||')[0])
+    .header_tools
+        button.header_tool.search-toggle(type="button" aria-label="Search")
+            i(class="fas fa-search" aria-hidden="true")
+        button.header_tool.theme-toggle(type="button" aria-label="Toggle color mode")
+            i.theme-icon(class="fas fa-moon" aria-hidden="true")

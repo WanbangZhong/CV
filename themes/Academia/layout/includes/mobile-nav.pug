@@ -1,0 +1,22 @@
+.nav-wrap
+    .nav
+        button.site-nav
+            .navicon
+        ul.nav_items
+            each value, label in theme.menu
+                if !Array.isArray(value)
+                    li.nav_item(class=(label === 'Projects' ? 'has-submenu' : ''))
+                        a.nav-page(href=url_for(trim(value.split('||')[0])))=' ' + label
+                        if label === 'Projects'
+                            ul.project-submenu.mobile-project-submenu
+                                li
+                                    a(href=url_for('/projects/#ann')) ANN
+                                li
+                                    a(href=url_for('/projects/#pnn')) PNN
+                                li
+                                    a(href=url_for('/projects/#fdtd')) FDTD
+                else
+                    li.nav_item
+                        a.nav-page=' ' + trim(label.split('||')[0])
+    .cd-top
+        i(class="fa fa-arrow-up" aria-hidden="true")

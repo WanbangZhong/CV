@@ -1,0 +1,71 @@
+doctype html
+html(lang=config.language)
+    head
+        meta(charset='UTF-8')
+        meta(http-equiv="X-UA-Compatible" content="IE=edge")
+        meta(name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5")
+        title=config.title
+        meta(name="author" content=config.author)
+        !=favicon_tag(config.favicon || theme.favicon || '/favicon.ico')
+        each item in theme.CDN_USE.css
+            link(rel='stylesheet', href=url_for(item))
+    body
+        header#page_header
+            include ./header.pug
+        main#page_main
+            include ./side-card.pug
+            block content
+        .search-panel(aria-hidden="true")
+            .search-dialog(role="dialog" aria-modal="true" aria-label="Site search")
+                .search-row
+                    i(class="fas fa-search" aria-hidden="true")
+                    input#site-search-input(type="search" placeholder="Search pages, posts, projects..." autocomplete="off")
+                    button.search-close(type="button" aria-label="Close search")
+                        i(class="fas fa-times" aria-hidden="true")
+                .search-results
+                    .search-empty Type a keyword to search the site.
+        include ./mobile-nav.pug
+        footer#page_footer
+            include ./footer.pug
+        -
+            var searchItems = [];
+            var listNames = function(value) {
+                if (!value) return '';
+                return value.map ? value.map(function(item) {
+                    return item.name || item.slug || item;
+                }).join(' ') : String(value);
+            };
+            var stripContent = function(html) {
+                return String(html || '').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            };
+            site.posts.data.forEach(function(item) {
+                var postText = [
+                    item.title,
+                    item.raw,
+                    item.content,
+                    item.excerpt,
+                    listNames(item.categories && item.categories.data),
+                    listNames(item.tags && item.tags.data)
+                ].join(' ');
+                searchItems.push({
+                    title: item.title || 'Untitled',
+                    url: url_for(item.path),
+                    type: 'Article',
+                    date: item.date ? item.date.format('YYYY.MM.DD') : '',
+                    text: stripContent(postText)
+                });
+            });
+            site.pages.data.forEach(function(item) {
+                if (!item.path || item.path.indexOf('404') === 0) return;
+                var pageText = [item.title, item.raw, item.content, item.excerpt].join(' ');
+                searchItems.push({
+                    title: item.title || item.path.replace(/\/?index\.html$/, '').replace(/\/$/, '') || 'Home',
+                    url: url_for(item.path),
+                    type: 'Page',
+                    date: item.date ? item.date.format('YYYY.MM.DD') : '',
+                    text: stripContent(pageText)
+                });
+            });
+        script#site-search-index(type="application/json")!= JSON.stringify(searchItems)
+        each item in theme.CDN_USE.js
+            script(src=url_for(item))
