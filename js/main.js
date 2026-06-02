@@ -264,6 +264,26 @@ $(function () {
         $('.search-panel').removeClass('is-open').attr('aria-hidden', 'true');
     }
 
+    function openRewardModal(label, image) {
+        var $modal = $('.reward-modal');
+        var $img = $modal.find('.reward-qr');
+        $modal.find('.reward-method').text(label || '');
+        $img.off('load.reward error.reward').removeClass('is-missing').one('load.reward', function() {
+            $(this).removeClass('is-missing');
+        }).one('error.reward', function() {
+            $(this).addClass('is-missing');
+        }).attr({
+            src: image || '',
+            alt: (label || 'Reward') + ' QR code'
+        });
+        if (!image) $img.addClass('is-missing');
+        $modal.addClass('is-open').attr('aria-hidden', 'false');
+    }
+
+    function closeRewardModal() {
+        $('.reward-modal').removeClass('is-open').attr('aria-hidden', 'true');
+    }
+
     function closeContactTips(except) {
         $('.social-contact.is-active').not(except || []).removeClass('is-active').attr('aria-expanded', 'false');
     }
@@ -340,6 +360,7 @@ $(function () {
     $(document).on('keydown', function(e) {
         if (e.key === 'Escape') {
             closeSearch();
+            closeRewardModal();
             closeContactTips();
         }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -348,6 +369,19 @@ $(function () {
         }
     });
     $(document).on('click', '.search-result', closeSearch);
+
+    $(document).on('click', '.footer-reward-button', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeContactTips();
+        openRewardModal($(this).data('reward-label'), $(this).data('reward-image'));
+    });
+
+    $(document).on('click', '.reward-close', closeRewardModal);
+
+    $(document).on('click', '.reward-modal', function(e) {
+        if ($(e.target).is('.reward-modal')) closeRewardModal();
+    });
 
     $(document).on('mouseenter', '.has-submenu', function() {
         clearTimeout(this._submenuTimer);

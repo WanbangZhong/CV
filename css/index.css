@@ -892,6 +892,7 @@ blockquote p {
 .footer-stats {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.45em 1.1em;
   margin-top: 0.55em;
   font-size: 0.9em;
@@ -910,6 +911,142 @@ blockquote p {
   color: #747b80;
   font-weight: 600;
 }
+.footer-rewards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65em;
+  margin-top: 0.7em;
+}
+.footer-reward-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2em;
+  height: 2.2em;
+  padding: 0;
+  border: 1px solid #d3d6d8;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  color: #8f969b;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.footer-reward-button i {
+  font-size: 1.8em;
+}
+.footer-reward-button:hover {
+  border-color: #9ba1a6;
+  color: #000;
+  background: rgba(255,255,255,0.85);
+}
+.reward-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.36);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.reward-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.reward-dialog {
+  position: relative;
+  width: 100%;
+  padding: 22px;
+  border: 1px solid #d3d6d8;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.22);
+  color: #1d1d1f;
+  text-align: center;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.2s ease;
+}
+.reward-modal.is-open .reward-dialog {
+  transform: translateY(0) scale(1);
+}
+.reward-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8f969b;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+.reward-close:hover {
+  color: #1d1d1f;
+  background: #f2f3f3;
+}
+.reward-header {
+  padding: 4px 32px 14px;
+}
+.reward-title {
+  color: #1d1d1f;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.reward-description {
+  margin-top: 4px;
+  color: #6e6e73;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+.reward-qr-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 248px;
+  padding: 14px;
+  border: 1px solid #e3e5e7;
+  border-radius: 8px;
+  background: #f8f9f9;
+}
+.reward-qr {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+}
+.reward-qr.is-missing {
+  display: none;
+}
+.reward-missing {
+  display: none;
+  color: #8f969b;
+  font-size: 1.3rem;
+  line-height: 1.6;
+}
+.reward-qr.is-missing + .reward-missing {
+  display: block;
+}
+.reward-method {
+  margin-top: 12px;
+  color: #747b80;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
 @media (min-width: 66.67em) {
   .footer_wrap {
     max-width: 1200px;
@@ -921,8 +1058,12 @@ blockquote p {
   }
 }
 @media (max-width: 34em) {
-  .footer-stats {
-    gap: 0.3em 0.9em;
+  .footer-stats,
+  .footer-rewards {
+    gap: 0.55em;
+  }
+  .reward-modal {
+    padding: 16px;
   }
 }
 .nav-wrap {
