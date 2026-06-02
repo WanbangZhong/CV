@@ -114,7 +114,7 @@ $(function () {
     }
 
     function initMotion() {
-        var cards = document.querySelectorAll('.article-card, .project-card, .section-head');
+        var cards = document.querySelectorAll('.article-card, .section-head');
         cards.forEach(function(card) {
             card.classList.add('motion-watch');
         });
@@ -140,7 +140,7 @@ $(function () {
         });
     }
 
-    $(document).on('mousemove', '.article-card, .project-card', function(e) {
+    $(document).on('mousemove', '.article-card', function(e) {
         var rect = this.getBoundingClientRect();
         var x = ((e.clientX - rect.left) / rect.width) * 100;
         var y = ((e.clientY - rect.top) / rect.height) * 100;
