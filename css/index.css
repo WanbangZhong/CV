@@ -1424,9 +1424,8 @@ body {
 }
 .category-submenu a::after,
 .project-submenu a::after {
-  content: "›";
-  color: var(--text-secondary);
-  font-size: 1.8rem;
+  content: none;
+  display: none;
 }
 .category-submenu a:hover,
 .project-submenu a:hover {
