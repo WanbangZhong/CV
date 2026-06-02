@@ -2,6 +2,7 @@ $(function () {
     var searchItems = [];
     var searchIndexLoaded = false;
     var searchIndexLoading = null;
+    var searchBaseUrl = null;
 
     function setTheme(mode) {
         document.documentElement.setAttribute('data-theme', mode);
@@ -20,6 +21,12 @@ $(function () {
     function loadSearchIndex() {
         if (searchIndexLoaded) return $.Deferred().resolve(searchItems).promise();
         if (searchIndexLoading) return searchIndexLoading;
+
+        if (Array.isArray(window.__ONEOAK_SEARCH_INDEX__)) {
+            searchItems = window.__ONEOAK_SEARCH_INDEX__;
+            searchIndexLoaded = true;
+            return $.Deferred().resolve(searchItems).promise();
+        }
 
         var panel = document.querySelector('.search-panel');
         var indexUrl = panel && panel.getAttribute('data-search-index-url');
@@ -44,7 +51,7 @@ $(function () {
             }, function() {
                 searchItems = [];
                 searchIndexLoaded = true;
-                $('.search-results').html('<div class="search-empty">Search index could not be loaded.</div>');
+                $('.search-results').html('<div class="search-empty">Search index could not be loaded. Please rebuild the site.</div>');
                 return searchItems;
             });
 
@@ -61,32 +68,91 @@ $(function () {
         return safeText;
     }
 
+    function currentSearchQuery() {
+        var input = document.getElementById('site-search-input');
+        return input ? input.value : '';
+    }
+
+    function searchDataBaseUrl() {
+        if (searchBaseUrl !== null) return searchBaseUrl;
+
+        var scripts = document.getElementsByTagName('script');
+        for (var index = 0; index < scripts.length; index += 1) {
+            var src = scripts[index].getAttribute('src') || '';
+            var cleanSrc = src.split('#')[0].split('?')[0];
+            var markerIndex = cleanSrc.indexOf('js/search-data.js');
+            if (markerIndex !== -1) {
+                searchBaseUrl = cleanSrc.slice(0, markerIndex);
+                return searchBaseUrl;
+            }
+        }
+
+        var panel = document.querySelector('.search-panel');
+        var indexUrl = panel && panel.getAttribute('data-search-index-url');
+        if (indexUrl) {
+            searchBaseUrl = indexUrl.replace(/search\.json(?:[?#].*)?$/, '');
+            return searchBaseUrl;
+        }
+
+        searchBaseUrl = '';
+        return searchBaseUrl;
+    }
+
+    function searchResultUrl(url) {
+        var target = String(url || '');
+        if (!target || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(target) || target.charAt(0) === '#') return target;
+        if (target.charAt(0) === '/') return target;
+        return searchDataBaseUrl() + target.replace(/^\/+/, '');
+    }
+
     function makeSnippet(text, terms) {
         var source = (text || '').replace(/\s+/g, ' ').trim();
         if (!source) return '';
+
         var lower = source.toLowerCase();
-        var index = -1;
+        var matchIndex = -1;
         terms.some(function(term) {
-            index = lower.indexOf(term);
-            return index !== -1;
+            matchIndex = lower.indexOf(term);
+            return matchIndex !== -1;
         });
-        if (index === -1) return source.slice(0, 180);
-        var start = Math.max(0, index - 70);
-        var end = Math.min(source.length, index + 150);
-        return (start > 0 ? '...' : '') + source.slice(start, end) + (end < source.length ? '...' : '');
+
+        if (matchIndex === -1) return source.slice(0, 150);
+
+        var sentenceStart = source.lastIndexOf('.', matchIndex);
+        var altStart = source.lastIndexOf('。', matchIndex);
+        sentenceStart = Math.max(sentenceStart, altStart);
+        var sentenceEnd = source.indexOf('.', matchIndex);
+        var altEnd = source.indexOf('。', matchIndex);
+        if (sentenceEnd === -1 || (altEnd !== -1 && altEnd < sentenceEnd)) sentenceEnd = altEnd;
+
+        var start = sentenceStart === -1 ? Math.max(0, matchIndex - 55) : sentenceStart + 1;
+        var end = sentenceEnd === -1 ? Math.min(source.length, matchIndex + 125) : sentenceEnd + 1;
+        var snippet = source.slice(start, end).trim();
+
+        if (snippet.length > 180) snippet = snippet.slice(0, 180).trim();
+        return (start > 0 ? '...' : '') + snippet + (end < source.length ? '...' : '');
+    }
+
+    function renderSearchEmpty(message) {
+        $('.search-results').html('<div class="search-empty">' + message + '</div>');
     }
 
     function searchSite(query) {
-        var terms = $.trim(query).toLowerCase().split(/\s+/).filter(Boolean);
+        var terms = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
         var $results = $('.search-results');
         if (!terms.length) {
-            $results.html('<div class="search-empty">Type a keyword to search the site.</div>');
+            renderSearchEmpty('Type a keyword to search the site.');
             return;
         }
         if (!searchIndexLoaded) {
             loadSearchIndex().then(function() {
-                searchSite(query);
+                searchSite(currentSearchQuery());
             });
+            return;
+        }
+
+        if (!searchItems.length) {
+            renderSearchEmpty('Search index is empty. Please rebuild the site.');
             return;
         }
 
@@ -115,29 +181,43 @@ $(function () {
             .sort(function(a, b) { return b.score - a.score; });
 
         if (!matches.length) {
-            $results.html('<div class="search-empty">No results found.</div>');
+            renderSearchEmpty('No articles found for "' + $('<div>').text(query).html() + '".');
             return;
         }
 
-        $results.html(matches.map(function(item) {
+        var resultList = matches.map(function(item) {
             var snippet = makeSnippet(item.text, terms);
             return [
-                '<a class="search-result" href="' + item.url + '">',
-                    '<span class="search-type">' + item.type + (item.date ? ' / ' + item.date : '') + '</span>',
-                    '<strong>' + highlightTerm(item.title, terms) + '</strong>',
-                    '<p>' + highlightTerm(snippet, terms) + '</p>',
-                '</a>'
+                '<li>',
+                    '<a class="search-result" href="' + searchResultUrl(item.url) + '">',
+                        '<span class="search-type">' + item.type + (item.date ? ' / ' + item.date : '') + '</span>',
+                        '<span class="search-result-title">' + highlightTerm(item.title, terms) + '</span>',
+                        '<span class="search-result-snippet">' + highlightTerm(snippet, terms) + '</span>',
+                    '</a>',
+                '</li>'
             ].join('');
-        }).join(''));
+        }).join('');
+
+        $results.html([
+            '<div class="search-count">' + matches.length + (matches.length === 1 ? ' article' : ' articles') + ' found</div>',
+            '<ul class="search-result-list">',
+                resultList,
+            '</ul>'
+        ].join(''));
+    }
+
+    function refreshSearchResults() {
+        searchSite(currentSearchQuery());
     }
 
     function openSearch() {
         $('.search-panel').addClass('is-open').attr('aria-hidden', 'false');
         loadSearchIndex().then(function() {
-            searchSite($('#site-search-input').val() || '');
+            refreshSearchResults();
         });
         setTimeout(function() {
             $('#site-search-input').trigger('focus');
+            refreshSearchResults();
         }, 80);
     }
 
@@ -198,9 +278,7 @@ $(function () {
 
     $('.search-toggle').click(openSearch);
     $('.search-close').click(closeSearch);
-    $('#site-search-input').on('input', function() {
-        searchSite(this.value);
-    });
+    $(document).on('input search keyup change', '#site-search-input', refreshSearchResults);
     $('.search-panel').click(function(e) {
         if ($(e.target).is('.search-panel')) closeSearch();
     });
