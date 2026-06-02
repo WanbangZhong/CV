@@ -302,10 +302,18 @@ $(function () {
         }, 120);
     });
 
+    function closeMenus() {
+        $(".header_wrap").removeClass("menus-open").addClass("menus-close");
+        $(".has-submenu").removeClass("submenu-open");
+        if (document.activeElement && $(document.activeElement).closest(".menus_items").length) {
+            document.activeElement.blur();
+        }
+    }
+
     // menu
     $(".menus_icon").click(function () {
         if ($(".header_wrap").hasClass("menus-open")) {
-            $(".header_wrap").removeClass("menus-open").addClass("menus-close")
+            closeMenus();
         } else {
             $(".header_wrap").removeClass("menus-close").addClass("menus-open")
         }
@@ -324,8 +332,12 @@ $(function () {
         if(target.closest(".author-links").length != 0) return;
         $(".author-links").removeClass("is-open").addClass("is-close")
         if((target.closest(".menus_icon").length != 0) || (target.closest(".menus_items").length != 0)) return;
-        $(".header_wrap").removeClass("menus-open").addClass("menus-close")
+        closeMenus();
     })
+
+    $(document).on('touchstart pointerdown', '.article-card', function() {
+        closeMenus();
+    });
 
     // 显示 cdtop
     $(document).ready(function ($) {
@@ -436,7 +448,7 @@ $(function () {
         },
         'pjax:end': function() {
             if ($(".header_wrap").hasClass("menus-open")) {
-                $(".header_wrap").removeClass("menus-open").addClass("menus-close")
+                closeMenus();
             }
             if ($(".author-links").hasClass("is-open")) {
                 $(".author-links").removeClass("is-open").addClass("is-close")
