@@ -4,9 +4,48 @@ $(function () {
     var searchIndexLoading = null;
     var searchBaseUrl = null;
 
-    function setTheme(mode) {
+    function isAcademicStyle() {
+        return $('body').hasClass('academic-style');
+    }
+
+    function syncStyleToggle(mode) {
+        var isAcademic = mode === 'academic';
+        $('.style-toggle')
+            .attr('aria-pressed', isAcademic ? 'true' : 'false')
+            .attr('aria-label', isAcademic ? 'Switch to current style' : 'Switch to simple style');
+        $('.style-icon')
+            .toggleClass('fa-toggle-on', isAcademic)
+            .toggleClass('fa-toggle-off', !isAcademic);
+        $('.style-label').text(isAcademic ? 'Simple' : 'Normal');
+        $('.theme-toggle').prop('disabled', isAcademic).attr('aria-hidden', isAcademic ? 'true' : 'false');
+    }
+
+    function setStyleMode(mode, persist) {
+        var styleMode = mode === 'academic' ? 'academic' : 'current';
+        $('body')
+            .toggleClass('academic-style', styleMode === 'academic')
+            .toggleClass('current-style', styleMode !== 'academic');
+
+        if (styleMode === 'academic') {
+            setTheme('light', false);
+        } else {
+            initTheme();
+        }
+
+        if (persist) localStorage.setItem('site-style-mode', styleMode);
+        syncStyleToggle(styleMode);
+    }
+
+    function initStyleMode() {
+        var saved = localStorage.getItem('site-style-mode');
+        var defaultMode = document.documentElement.getAttribute('data-default-style') || 'current';
+        setStyleMode(saved || defaultMode, false);
+    }
+
+    function setTheme(mode, persist) {
+        if (isAcademicStyle() && mode === 'dark') mode = 'light';
         document.documentElement.setAttribute('data-theme', mode);
-        localStorage.setItem('site-theme', mode);
+        if (persist !== false) localStorage.setItem('site-theme', mode);
         $('.theme-icon')
             .toggleClass('fa-moon', mode !== 'dark')
             .toggleClass('fa-sun', mode === 'dark');
@@ -279,10 +318,15 @@ $(function () {
         this.style.setProperty('--mouse-y', y + '%');
     });
 
-    initTheme();
+    initStyleMode();
     revealPage();
 
+    $('.style-toggle').click(function() {
+        setStyleMode(isAcademicStyle() ? 'current' : 'academic', true);
+    });
+
     $('.theme-toggle').click(function() {
+        if (isAcademicStyle()) return;
         var current = document.documentElement.getAttribute('data-theme') || 'light';
         setTheme(current === 'dark' ? 'light' : 'dark');
     });
@@ -405,6 +449,39 @@ $(function () {
         return slug || 'all';
     }
 
+    function scrollActiveCategoryLink(activeLink) {
+        var nav = activeLink && activeLink.closest('.content-category-nav');
+        if (!nav) return;
+
+        var style = window.getComputedStyle ? window.getComputedStyle(nav) : null;
+        var paddingLeft = style ? parseFloat(style.paddingLeft) || 0 : 0;
+        var paddingRight = style ? parseFloat(style.paddingRight) || 0 : 0;
+        var safety = 8;
+        var visibleLeft = nav.scrollLeft + paddingLeft + safety;
+        var visibleRight = nav.scrollLeft + nav.clientWidth - paddingRight - safety;
+        var linkLeft = activeLink.offsetLeft;
+        var linkRight = linkLeft + activeLink.offsetWidth;
+        var nextScroll = nav.scrollLeft;
+
+        if (linkLeft < visibleLeft) {
+            nextScroll = linkLeft - paddingLeft - safety;
+        } else if (linkRight > visibleRight) {
+            nextScroll = linkRight - nav.clientWidth + paddingRight + safety;
+        }
+
+        nextScroll = Math.max(0, Math.min(nextScroll, nav.scrollWidth - nav.clientWidth));
+        if (Math.abs(nextScroll - nav.scrollLeft) < 1) return;
+
+        if (nav.scrollTo) {
+            nav.scrollTo({
+                left: nextScroll,
+                behavior: 'smooth'
+            });
+        } else {
+            nav.scrollLeft = nextScroll;
+        }
+    }
+
     function setCategoryFilter(slug) {
         var container = document.getElementById('article-grid-container');
         if (!container) return;
@@ -429,10 +506,7 @@ $(function () {
 
         var activeLink = document.querySelector('.content-category-nav .content-category-link.is-active');
         if (activeLink && window.matchMedia && window.matchMedia('(max-width: 959px)').matches) {
-            activeLink.scrollIntoView({
-                block: 'nearest',
-                inline: 'center'
-            });
+            scrollActiveCategoryLink(activeLink);
         }
 
         var empty = document.getElementById('article-filter-empty');
@@ -508,6 +582,7 @@ $(function () {
             setTimeout(function() {
                 initArticleCards();
                 setCategoryFilter(currentCategorySlug());
+                syncStyleToggle(isAcademicStyle() ? 'academic' : 'current');
             }, 100);
             revealPage();
         }
