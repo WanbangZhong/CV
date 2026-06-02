@@ -1559,6 +1559,12 @@ body {
   gap: 10px;
   margin: 0.4rem 0 1.6rem;
   padding: 0 0 0.2rem;
+  scrollbar-width: none;
+}
+.content-category-nav::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .content-category-link {
   display: inline-flex;
@@ -1955,6 +1961,38 @@ html[data-theme='dark'] .tone-amber {
   .page article {
     padding: 0 2rem 2.4rem;
   }
+  .content-category-nav {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 12px;
+    margin: 0.4rem -2rem 1.6rem;
+    padding: 0 2rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2rem;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+  }
+  .content-category-nav::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  .content-category-link {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 0 16px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  .content-category-link span,
+  .content-category-link small {
+    flex: 0 0 auto;
+  }
   .header_wrap {
     position: relative;
     flex-wrap: nowrap;
@@ -2207,14 +2245,20 @@ html[data-theme='dark'] .tone-amber {
     flex-wrap: nowrap;
     margin-left: -1.4rem;
     margin-right: -1.4rem;
-    padding: 0 1.4rem 0.6rem;
+    padding: 0 1.4rem;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 1.4rem;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
   }
   .content-category-link {
     flex: 0 0 auto;
-    min-height: 34px;
-    padding: 0 12px;
+    min-height: 40px;
+    padding: 0 14px;
     font-size: 1.25rem;
   }
   .article-grid {

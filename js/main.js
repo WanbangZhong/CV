@@ -377,12 +377,20 @@ $(function () {
             if (isVisible) visibleCount += 1;
         });
 
-        $('.content-category-link')
+        $('.content-category-nav .content-category-link')
             .removeClass('is-active')
             .filter(function() {
                 return ($(this).data('category-filter') || 'all') === activeSlug;
             })
             .addClass('is-active');
+
+        var activeLink = document.querySelector('.content-category-nav .content-category-link.is-active');
+        if (activeLink && window.matchMedia && window.matchMedia('(max-width: 959px)').matches) {
+            activeLink.scrollIntoView({
+                block: 'nearest',
+                inline: 'center'
+            });
+        }
 
         var empty = document.getElementById('article-filter-empty');
         if (empty) empty.hidden = visibleCount > 0;
@@ -417,12 +425,12 @@ $(function () {
         setCategoryFilter(currentCategorySlug());
     }
 
-    $(document).on('click', 'a[data-category-filter]', function(event) {
+    $(document).on('click', '.content-category-nav a[data-category-filter]', function(event) {
         var link = this;
         var linkUrl = new URL(link.href, window.location.href);
         var samePage = linkUrl.origin === window.location.origin && linkUrl.pathname === window.location.pathname;
 
-        if (!samePage || !document.getElementById('article-grid-container')) return;
+        if (!samePage || !link.closest('.content-category-nav') || !document.getElementById('article-grid-container')) return;
 
         event.preventDefault();
         var slug = ($(link).data('category-filter') || 'all').toString();
