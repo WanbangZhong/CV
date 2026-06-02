@@ -644,6 +644,17 @@ blockquote p {
 .social-icons a {
   font-size: 1.7rem;
 }
+.social-icons button.social-icon {
+  position: relative;
+  margin: 0 0 5px;
+  padding: 2px 5px 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.7rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
 .social-icons li {
   display: inline-block;
 }
@@ -665,6 +676,68 @@ blockquote p {
 .social-icons .fas:hover,
 .social-icons .fab:hover {
   color: #c62641;
+}
+.social-contact-tip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 12px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: max-content;
+  max-width: 72vw;
+  padding: 8px 10px;
+  border: 1px solid var(--line, #f2f3f3);
+  border-radius: 8px;
+  background: var(--surface-solid, #fff);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.16);
+  color: var(--text-primary, #1d1d1f);
+  text-align: left;
+  pointer-events: auto;
+  user-select: text;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+}
+.social-contact-tip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid var(--line, #f2f3f3);
+  border-top: 1px solid var(--line, #f2f3f3);
+  background: var(--surface-solid, #fff);
+  transform: translateX(-50%) rotate(45deg);
+}
+.social-contact-label {
+  color: var(--text-secondary, #6e6e73);
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+.social-contact-value {
+  color: var(--text-primary, #1d1d1f);
+  font-size: 1.35rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.social-contact.is-active .social-contact-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+.social-contact.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 100%;
+  min-width: 42px;
+  height: 12px;
+  transform: translateX(-50%);
 }
 .is-open .social-icons {
   visibility: visible;
@@ -1932,7 +2005,8 @@ html[data-theme='dark'] .tone-amber {
     display: inline-flex;
     margin: 0;
   }
-  .social-icons a {
+  .social-icons a,
+  .social-icons button.social-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;

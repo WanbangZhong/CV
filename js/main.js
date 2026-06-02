@@ -225,6 +225,17 @@ $(function () {
         $('.search-panel').removeClass('is-open').attr('aria-hidden', 'true');
     }
 
+    function closeContactTips(except) {
+        $('.social-contact.is-active').not(except || []).removeClass('is-active').attr('aria-expanded', 'false');
+    }
+
+    function clearContactTimer(contact) {
+        if (contact && contact._contactCloseTimer) {
+            clearTimeout(contact._contactCloseTimer);
+            contact._contactCloseTimer = null;
+        }
+    }
+
     function revealPage() {
         $('.page, .side-card').removeClass('content-ready');
         setTimeout(function() {
@@ -283,7 +294,10 @@ $(function () {
         if ($(e.target).is('.search-panel')) closeSearch();
     });
     $(document).on('keydown', function(e) {
-        if (e.key === 'Escape') closeSearch();
+        if (e.key === 'Escape') {
+            closeSearch();
+            closeContactTips();
+        }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
             e.preventDefault();
             openSearch();
@@ -327,8 +341,37 @@ $(function () {
         }
     })
 
+    $(document).on('mousedown mouseup click', '.social-contact-tip', function(e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('click', '.social-contact', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if ($(e.target).closest('.social-contact-tip').length) return;
+        clearContactTimer(this);
+        var $button = $(this);
+        var shouldOpen = !$button.hasClass('is-active');
+        closeContactTips(this);
+        $button.toggleClass('is-active', shouldOpen).attr('aria-expanded', shouldOpen ? 'true' : 'false');
+    });
+
+    $(document).on('mouseenter', '.social-contact', function() {
+        clearContactTimer(this);
+    });
+
+    $(document).on('mouseleave focusout', '.social-contact', function() {
+        var contact = this;
+        clearContactTimer(contact);
+        contact._contactCloseTimer = setTimeout(function() {
+            $(contact).removeClass('is-active').attr('aria-expanded', 'false');
+            contact._contactCloseTimer = null;
+        }, 160);
+    });
+
     $(document).click(function(e){
         var target = $(e.target);
+        closeContactTips();
         if(target.closest(".author-links").length != 0) return;
         $(".author-links").removeClass("is-open").addClass("is-close")
         if((target.closest(".menus_icon").length != 0) || (target.closest(".menus_items").length != 0)) return;
