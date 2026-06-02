@@ -247,6 +247,45 @@ $(function () {
         });
     });
 
+    function currentCategorySlug() {
+        var slug = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+        return slug || 'all';
+    }
+
+    function setCategoryFilter(slug) {
+        var container = document.getElementById('article-grid-container');
+        if (!container) return;
+
+        var activeSlug = slug || currentCategorySlug();
+        var showAll = !activeSlug || activeSlug === 'all';
+        var visibleCount = 0;
+        var cards = Array.from(container.querySelectorAll('.article-card'));
+
+        cards.forEach(function(card) {
+            var isVisible = showAll || card.dataset.categorySlug === activeSlug;
+            card.hidden = !isVisible;
+            if (isVisible) visibleCount += 1;
+        });
+
+        $('.content-category-link')
+            .removeClass('is-active')
+            .filter(function() {
+                return ($(this).data('category-filter') || 'all') === activeSlug;
+            })
+            .addClass('is-active');
+
+        var empty = document.getElementById('article-filter-empty');
+        if (empty) empty.hidden = visibleCount > 0;
+    }
+
+    function scrollToArticleGrid() {
+        var target = $('#article-grid-container');
+        if (!target.length) return;
+        $('html,body').animate({
+            scrollTop: Math.max(0, target.offset().top - 120)
+        }, 450);
+    }
+
     // ========== 文章卡片初始化函数 ==========
     function initArticleCards() {
         var container = document.getElementById('article-grid-container');
@@ -264,7 +303,27 @@ $(function () {
         cards.forEach(function(card) {
             container.appendChild(card);
         });
+
+        setCategoryFilter(currentCategorySlug());
     }
+
+    $(document).on('click', 'a[data-category-filter]', function(event) {
+        var link = this;
+        var linkUrl = new URL(link.href, window.location.href);
+        var samePage = linkUrl.origin === window.location.origin && linkUrl.pathname === window.location.pathname;
+
+        if (!samePage || !document.getElementById('article-grid-container')) return;
+
+        event.preventDefault();
+        var slug = ($(link).data('category-filter') || 'all').toString();
+        history.pushState(null, '', linkUrl.pathname + (slug === 'all' ? '#all' : '#' + slug));
+        setCategoryFilter(slug);
+        scrollToArticleGrid();
+    });
+
+    $(window).on('hashchange', function() {
+        setCategoryFilter(currentCategorySlug());
+    });
 
     // pjax
     $(document).pjax('a[target!=_blank]','.page', {
@@ -289,7 +348,10 @@ $(function () {
             }
             
             // ========== PJAX 加载完成后初始化卡片 ==========
-            setTimeout(initArticleCards, 100);
+            setTimeout(function() {
+                initArticleCards();
+                setCategoryFilter(currentCategorySlug());
+            }, 100);
             revealPage();
         }
     });
