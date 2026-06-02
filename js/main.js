@@ -1,5 +1,7 @@
 $(function () {
     var searchItems = [];
+    var searchIndexLoaded = false;
+    var searchIndexLoading = null;
 
     function setTheme(mode) {
         document.documentElement.setAttribute('data-theme', mode);
@@ -15,14 +17,38 @@ $(function () {
         setTheme(saved || (prefersDark ? 'dark' : 'light'));
     }
 
-    function readSearchIndex() {
-        var node = document.getElementById('site-search-index');
-        if (!node) return;
-        try {
-            searchItems = JSON.parse(node.textContent || '[]');
-        } catch (error) {
+    function loadSearchIndex() {
+        if (searchIndexLoaded) return $.Deferred().resolve(searchItems).promise();
+        if (searchIndexLoading) return searchIndexLoading;
+
+        var panel = document.querySelector('.search-panel');
+        var indexUrl = panel && panel.getAttribute('data-search-index-url');
+
+        if (!indexUrl) {
+            searchIndexLoaded = true;
             searchItems = [];
+            return $.Deferred().resolve(searchItems).promise();
         }
+
+        $('.search-results').html('<div class="search-empty">Loading search index...</div>');
+        searchIndexLoading = $.ajax({
+            url: indexUrl,
+            dataType: 'json',
+            cache: false,
+            timeout: 8000
+        })
+            .then(function(items) {
+                searchItems = Array.isArray(items) ? items : [];
+                searchIndexLoaded = true;
+                return searchItems;
+            }, function() {
+                searchItems = [];
+                searchIndexLoaded = true;
+                $('.search-results').html('<div class="search-empty">Search index could not be loaded.</div>');
+                return searchItems;
+            });
+
+        return searchIndexLoading;
     }
 
     function highlightTerm(text, terms) {
@@ -57,6 +83,12 @@ $(function () {
             $results.html('<div class="search-empty">Type a keyword to search the site.</div>');
             return;
         }
+        if (!searchIndexLoaded) {
+            loadSearchIndex().then(function() {
+                searchSite(query);
+            });
+            return;
+        }
 
         var matches = searchItems
             .map(function(item) {
@@ -64,18 +96,23 @@ $(function () {
                 var body = (item.text || '').toLowerCase();
                 var meta = [item.type, item.date].join(' ').toLowerCase();
                 var haystack = [title, body, meta].join(' ');
+                var isMatch = terms.every(function(term) {
+                    return haystack.indexOf(term) !== -1;
+                });
                 var score = 0;
                 terms.forEach(function(term) {
                     if (title.indexOf(term) !== -1) score += 6;
                     if (body.indexOf(term) !== -1) score += 2;
                     if (meta.indexOf(term) !== -1) score += 1;
                 });
-                if (terms.every(function(term) { return haystack.indexOf(term) !== -1; })) score += 3;
-                return $.extend({}, item, { score: score });
+                if (isMatch) score += 3;
+                return $.extend({}, item, {
+                    isMatch: isMatch,
+                    score: score
+                });
             })
-            .filter(function(item) { return item.score > 0; })
-            .sort(function(a, b) { return b.score - a.score; })
-            .slice(0, 12);
+            .filter(function(item) { return item.isMatch; })
+            .sort(function(a, b) { return b.score - a.score; });
 
         if (!matches.length) {
             $results.html('<div class="search-empty">No results found.</div>');
@@ -96,6 +133,9 @@ $(function () {
 
     function openSearch() {
         $('.search-panel').addClass('is-open').attr('aria-hidden', 'false');
+        loadSearchIndex().then(function() {
+            searchSite($('#site-search-input').val() || '');
+        });
         setTimeout(function() {
             $('#site-search-input').trigger('focus');
         }, 80);
@@ -149,7 +189,6 @@ $(function () {
     });
 
     initTheme();
-    readSearchIndex();
     revealPage();
 
     $('.theme-toggle').click(function() {
