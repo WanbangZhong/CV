@@ -1767,7 +1767,7 @@ body {
 }
 .article-card.has-cover .article-card-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 38%);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 50%);
   gap: 24px;
   align-items: stretch;
 }
