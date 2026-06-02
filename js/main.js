@@ -185,15 +185,6 @@ $(function () {
         }, 120);
     });
 
-    // resize window
-    $(window).resize(function () {
-        if ($(window).width() < 1280 && $(window).width()>540) {
-            $(".page").css({"width": $(window).width() - $(".side-card").width() - 90, "float": "left"})
-        } else {
-            $(".page").removeAttr("style")
-        }
-    });
-
     // menu
     $(".menus_icon").click(function () {
         if ($(".header_wrap").hasClass("menus-open")) {
@@ -211,18 +202,8 @@ $(function () {
         }
     })
 
-    $(".site-nav").click(function () {
-        if ($(".nav").hasClass("nav-open")) {
-            $(".nav").removeClass("nav-open").addClass("nav-close")
-        } else {
-            $(".nav").removeClass("nav-close").addClass("nav-open")
-        }
-    })
-
     $(document).click(function(e){
         var target = $(e.target);
-        if(target.closest(".nav").length != 0) return;
-        $(".nav").removeClass("nav-open").addClass("nav-close")
         if(target.closest(".author-links").length != 0) return;
         $(".author-links").removeClass("is-open").addClass("is-close")
         if((target.closest(".menus_icon").length != 0) || (target.closest(".menus_items").length != 0)) return;
@@ -343,10 +324,6 @@ $(function () {
             if ($(".author-links").hasClass("is-open")) {
                 $(".author-links").removeClass("is-open").addClass("is-close")
             }
-            if ($(".nav").hasClass("nav-open")) {
-                $(".nav").removeClass("nav-open").addClass("nav-close")
-            }
-            
             // ========== PJAX 加载完成后初始化卡片 ==========
             setTimeout(function() {
                 initArticleCards();
