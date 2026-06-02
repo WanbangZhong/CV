@@ -1670,6 +1670,9 @@ body {
   transform: scale(1.12) rotate(3deg);
   opacity: 0.95;
 }
+.article-card[hidden] {
+  display: none !important;
+}
 .article-card-inner {
   position: relative;
   z-index: 1;
