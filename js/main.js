@@ -340,6 +340,8 @@ $(function () {
 
     initStyleMode();
     revealPage();
+    // 确保手机端导航栏默认关闭
+    closeMenus();
 
     $('.style-toggle').click(function() {
         setStyleMode(isAcademicStyle() ? 'current' : 'academic', true);

@@ -1650,6 +1650,7 @@ mark {
     right: 70px;
   }
   .menus_items {
+    display: none !important;
     background: var(--surface-solid);
     border-color: var(--line);
   }
