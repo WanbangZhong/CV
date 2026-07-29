@@ -1138,24 +1138,6 @@ html[data-theme='dark'] .reward-qr-wrap {
   opacity: 1;
   pointer-events: auto;
 }
-.nav {
-  height: 30px;
-  width: 30px;
-}
-.site-nav {
-  position: absolute;
-  height: 30px;
-  width: 30px;
-  background-color: #7a8288;
-  color: #fff;
-  cursor: pointer;
-  padding: 0px 0.3rem;
-  border-width: 0px;
-  border-style: initial;
-  border-color: initial;
-  border-image: initial;
-  outline: none;
-}
 .navicon {
   position: relative;
   width: 18px;
@@ -1183,82 +1165,6 @@ html[data-theme='dark'] .reward-qr-wrap {
   height: 3px;
   background: #fff;
   transition: all 0.3s ease 0s;
-}
-.nav-open .navicon {
-  background: transparent;
-}
-.nav-open .navicon::before {
-  transform-origin: 50% 50%;
-  top: 0px;
-  left: -3px;
-  width: 25px;
-  transform: rotate3d(0, 0, 1, 45deg);
-}
-.nav-open .navicon::after {
-  transform-origin: 50% 50%;
-  top: 0px;
-  left: -3px;
-  width: 25px;
-  transform: rotate3d(0, 0, 1, -45deg);
-}
-.nav_items {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  right: 45px;
-  top: -20px;
-  margin: 0;
-  box-shadow: rgba(0,0,0,0.25) 0px 0px 10px;
-  padding: 5px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #f2f3f3;
-  border-image: initial;
-  border-radius: 4px;
-  background: #fff;
-  list-style: none;
-  transition: all ease-in-out 0.2s;
-}
-.nav_items li {
-  display: block;
-  border-bottom: 1px solid #f2f3f3;
-}
-.nav_items li a {
-  display: block;
-  color: #7a8288;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-  font-size: 1.6rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  margin: 0px;
-  padding: 10px 20px;
-  text-decoration: none;
-  transition: all 0.2s ease-in-out 0s;
-}
-.nav_items li a:hover {
-  color: #5c6266;
-  background: #dee0e1;
-}
-.nav_items::before {
-  content: "";
-  position: absolute;
-  top: 20px;
-  right: -10px;
-  width: 0px;
-  display: block;
-  z-index: 0;
-  border-style: solid;
-  border-width: 10px 0px 10px 10px;
-  border-color: transparent transparent transparent #fff;
-}
-.nav_items::after {
-  clear: both;
-  content: "";
-  display: table;
-}
-.nav-open .nav_items {
-  visibility: visible;
-  opacity: 1;
 }
 .cd-top {
   display: block;
@@ -1500,8 +1406,7 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(0,0,0,0.12);
 }
-.menus_icon,
-.site-nav {
+.menus_icon {
   border-radius: 50%;
   background-color: var(--text-primary);
 }
@@ -1769,29 +1674,6 @@ mark {
     visibility: hidden !important;
     opacity: 0 !important;
   }
-}
-.nav_items .category-submenu,
-.nav_items .project-submenu {
-  position: static;
-  min-width: 0;
-  margin: 4px 0 2px;
-  padding: 4px;
-  border-radius: 12px;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: none;
-  box-shadow: none;
-  background: var(--surface-soft);
-}
-.nav_items .category-submenu::before,
-.nav_items .project-submenu::before {
-  content: none;
-}
-.nav_items .category-submenu a,
-.nav_items .project-submenu a {
-  padding: 8px 12px !important;
-  font-size: 1.35rem;
 }
 :root {
   --wash-a: rgba(0,113,227,0.13);
@@ -2832,7 +2714,6 @@ html[data-theme='dark'] .tone-amber {
 }
 .academic-style #site-name,
 .academic-style .menus_items li a,
-.academic-style .nav_items a,
 .academic-style .category-submenu a,
 .academic-style .project-submenu a {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
@@ -2854,7 +2735,6 @@ html[data-theme='dark'] .tone-amber {
   display: none;
 }
 .academic-style .menus_icon,
-.academic-style .site-nav,
 .academic-style .cd-top i {
   background-color: #555;
   border-radius: 3px;
@@ -2870,8 +2750,7 @@ html[data-theme='dark'] .tone-amber {
 }
 .academic-style .category-submenu,
 .academic-style .project-submenu,
-.academic-style .menus_items,
-.academic-style .nav_items {
+.academic-style .menus_items {
   border: 1px solid var(--line);
   border-radius: 4px;
   background: var(--surface) !important;
@@ -2880,15 +2759,13 @@ html[data-theme='dark'] .tone-amber {
   -webkit-backdrop-filter: none !important;
 }
 .academic-style .category-submenu a,
-.academic-style .project-submenu a,
-.academic-style .nav_items a {
+.academic-style .project-submenu a {
   border-radius: 3px;
   color: var(--text-primary) !important;
   font-weight: 400;
 }
 .academic-style .category-submenu a:hover,
-.academic-style .project-submenu a:hover,
-.academic-style .nav_items a:hover {
+.academic-style .project-submenu a:hover {
   color: var(--accent) !important;
   background: var(--surface-soft) !important;
   transform: none;

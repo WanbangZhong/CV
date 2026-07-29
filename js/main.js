@@ -1,659 +1,623 @@
-$(function () {
-    var searchItems = [];
-    var searchIndexLoaded = false;
-    var searchIndexLoading = null;
-    var searchBaseUrl = null;
+(function () {
+    'use strict';
 
-    function isAcademicStyle() {
-        return $('body').hasClass('academic-style');
-    }
-
-    function syncStyleToggle(mode) {
-        var isAcademic = mode === 'academic';
-        $('.style-toggle')
-            .attr('aria-pressed', isAcademic ? 'true' : 'false')
-            .attr('aria-label', isAcademic ? 'Switch to current style' : 'Switch to simple style');
-        $('.style-icon')
-            .toggleClass('fa-toggle-on', isAcademic)
-            .toggleClass('fa-toggle-off', !isAcademic);
-        $('.style-label').text(isAcademic ? 'Simple' : 'Normal');
-        $('.theme-toggle').prop('disabled', isAcademic).attr('aria-hidden', isAcademic ? 'true' : 'false');
-    }
-
-    function setStyleMode(mode, persist) {
-        var styleMode = mode === 'academic' ? 'academic' : 'current';
-        $('body')
-            .toggleClass('academic-style', styleMode === 'academic')
-            .toggleClass('current-style', styleMode !== 'academic');
-
-        if (styleMode === 'academic') {
-            setTheme('light', false);
+    function ready(callback) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', callback, { once: true });
         } else {
-            initTheme();
+            callback();
+        }
+    }
+
+    ready(function () {
+        var root = document.documentElement;
+        var body = document.body;
+        var searchPanel = document.querySelector('.search-panel');
+        var searchResults = document.querySelector('.search-results');
+        var searchInput = document.getElementById('site-search-input');
+        var rewardModal = document.querySelector('.reward-modal');
+        var scheduleFrame = window.requestAnimationFrame || function (callback) {
+            return setTimeout(callback, 16);
+        };
+
+        function all(selector, context) {
+            return Array.from((context || document).querySelectorAll(selector));
         }
 
-        if (persist) localStorage.setItem('site-style-mode', styleMode);
-        syncStyleToggle(styleMode);
-    }
-
-    function initStyleMode() {
-        var saved = localStorage.getItem('site-style-mode');
-        var defaultMode = document.documentElement.getAttribute('data-default-style') || 'current';
-        setStyleMode(saved || defaultMode, false);
-    }
-
-    function setTheme(mode, persist) {
-        if (isAcademicStyle() && mode === 'dark') mode = 'light';
-        document.documentElement.setAttribute('data-theme', mode);
-        if (persist !== false) localStorage.setItem('site-theme', mode);
-        $('.theme-icon')
-            .toggleClass('fa-moon', mode !== 'dark')
-            .toggleClass('fa-sun', mode === 'dark');
-    }
-
-    function initTheme() {
-        var saved = localStorage.getItem('site-theme');
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(saved || (prefersDark ? 'dark' : 'light'));
-    }
-
-    function loadSearchIndex() {
-        if (searchIndexLoaded) return $.Deferred().resolve(searchItems).promise();
-        if (searchIndexLoading) return searchIndexLoading;
-
-        if (Array.isArray(window.__ONEOAK_SEARCH_INDEX__)) {
-            searchItems = window.__ONEOAK_SEARCH_INDEX__;
-            searchIndexLoaded = true;
-            return $.Deferred().resolve(searchItems).promise();
+        function delegate(eventName, selector, handler, options) {
+            document.addEventListener(eventName, function (event) {
+                var target = event.target.closest && event.target.closest(selector);
+                if (target) handler.call(target, event);
+            }, options);
         }
 
-        var panel = document.querySelector('.search-panel');
-        var indexUrl = panel && panel.getAttribute('data-search-index-url');
-
-        if (!indexUrl) {
-            searchIndexLoaded = true;
-            searchItems = [];
-            return $.Deferred().resolve(searchItems).promise();
+        function isAcademicStyle() {
+            return body.classList.contains('academic-style');
         }
 
-        $('.search-results').html('<div class="search-empty">Loading search index...</div>');
-        searchIndexLoading = $.ajax({
-            url: indexUrl,
-            dataType: 'json',
-            cache: false,
-            timeout: 8000
-        })
-            .then(function(items) {
-                searchItems = Array.isArray(items) ? items : [];
-                searchIndexLoaded = true;
-                return searchItems;
-            }, function() {
-                searchItems = [];
-                searchIndexLoaded = true;
-                $('.search-results').html('<div class="search-empty">Search index could not be loaded. Please rebuild the site.</div>');
-                return searchItems;
+        function syncStyleToggle(mode) {
+            var isAcademic = mode === 'academic';
+            all('.style-toggle').forEach(function (toggle) {
+                toggle.setAttribute('aria-pressed', isAcademic ? 'true' : 'false');
+                toggle.setAttribute('aria-label', isAcademic ? 'Switch to current style' : 'Switch to simple style');
             });
-
-        return searchIndexLoading;
-    }
-
-    function highlightTerm(text, terms) {
-        var safeText = $('<div>').text(text || '').html();
-        if (!terms || !terms.length) return safeText;
-        terms.forEach(function(term) {
-            var escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            safeText = safeText.replace(new RegExp('(' + escaped + ')', 'ig'), '<mark>$1</mark>');
-        });
-        return safeText;
-    }
-
-    function currentSearchQuery() {
-        var input = document.getElementById('site-search-input');
-        return input ? input.value : '';
-    }
-
-    function searchDataBaseUrl() {
-        if (searchBaseUrl !== null) return searchBaseUrl;
-
-        var scripts = document.getElementsByTagName('script');
-        for (var index = 0; index < scripts.length; index += 1) {
-            var src = scripts[index].getAttribute('src') || '';
-            var cleanSrc = src.split('#')[0].split('?')[0];
-            var markerIndex = cleanSrc.indexOf('js/search-data.js');
-            if (markerIndex !== -1) {
-                searchBaseUrl = cleanSrc.slice(0, markerIndex);
-                return searchBaseUrl;
-            }
+            all('.style-icon').forEach(function (icon) {
+                icon.classList.toggle('fa-toggle-on', isAcademic);
+                icon.classList.toggle('fa-toggle-off', !isAcademic);
+            });
+            all('.style-label').forEach(function (label) {
+                label.textContent = isAcademic ? 'Simple' : 'Normal';
+            });
+            all('.theme-toggle').forEach(function (toggle) {
+                toggle.disabled = isAcademic;
+                toggle.setAttribute('aria-hidden', isAcademic ? 'true' : 'false');
+            });
         }
 
-        var panel = document.querySelector('.search-panel');
-        var indexUrl = panel && panel.getAttribute('data-search-index-url');
-        if (indexUrl) {
-            searchBaseUrl = indexUrl.replace(/search\.json(?:[?#].*)?$/, '');
+        function setTheme(mode, persist) {
+            if (isAcademicStyle() && mode === 'dark') mode = 'light';
+            root.setAttribute('data-theme', mode);
+            if (persist !== false) localStorage.setItem('site-theme', mode);
+            all('.theme-icon').forEach(function (icon) {
+                icon.classList.toggle('fa-moon', mode !== 'dark');
+                icon.classList.toggle('fa-sun', mode === 'dark');
+            });
+        }
+
+        function initTheme() {
+            var saved = localStorage.getItem('site-theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(saved || (prefersDark ? 'dark' : 'light'));
+        }
+
+        function setStyleMode(mode, persist) {
+            var styleMode = mode === 'academic' ? 'academic' : 'current';
+            body.classList.toggle('academic-style', styleMode === 'academic');
+            body.classList.toggle('current-style', styleMode !== 'academic');
+
+            if (styleMode === 'academic') {
+                setTheme('light', false);
+            } else {
+                initTheme();
+            }
+
+            if (persist) localStorage.setItem('site-style-mode', styleMode);
+            syncStyleToggle(styleMode);
+        }
+
+        function initStyleMode() {
+            var saved = localStorage.getItem('site-style-mode');
+            var defaultMode = root.getAttribute('data-default-style') || 'current';
+            setStyleMode(saved || defaultMode, false);
+        }
+
+        var searchItems = [];
+        var searchIndexLoaded = false;
+        var searchIndexLoading = null;
+        var searchRefreshPending = false;
+        var searchBaseUrl = null;
+
+        function loadSearchIndex() {
+            if (searchIndexLoaded) return Promise.resolve(searchItems);
+            if (searchIndexLoading) return searchIndexLoading;
+
+            var indexUrl = searchPanel && searchPanel.getAttribute('data-search-index-url');
+            if (!indexUrl) {
+                searchIndexLoaded = true;
+                return Promise.resolve(searchItems);
+            }
+
+            searchResults.innerHTML = '<div class="search-empty">Loading search index...</div>';
+            searchIndexLoading = fetch(indexUrl, { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Search index request failed');
+                    return response.json();
+                })
+                .then(function (items) {
+                    searchItems = Array.isArray(items) ? items : [];
+                    searchIndexLoaded = true;
+                    return searchItems;
+                })
+                .catch(function () {
+                    searchItems = [];
+                    searchIndexLoaded = true;
+                    searchResults.innerHTML = '<div class="search-empty">Search index could not be loaded. Please rebuild the site.</div>';
+                    return searchItems;
+                });
+
+            return searchIndexLoading;
+        }
+
+        function escapeHtml(value) {
+            var element = document.createElement('div');
+            element.textContent = value || '';
+            return element.innerHTML;
+        }
+
+        function highlightTerm(text, terms) {
+            var safeText = escapeHtml(text);
+            if (!terms || !terms.length) return safeText;
+            terms.forEach(function (term) {
+                var escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                safeText = safeText.replace(new RegExp('(' + escaped + ')', 'ig'), '<mark>$1</mark>');
+            });
+            return safeText;
+        }
+
+        function currentSearchQuery() {
+            return searchInput ? searchInput.value : '';
+        }
+
+        function searchDataBaseUrl() {
+            if (searchBaseUrl !== null) return searchBaseUrl;
+            var indexUrl = searchPanel && searchPanel.getAttribute('data-search-index-url');
+            searchBaseUrl = indexUrl ? indexUrl.replace(/search\.json(?:[?#].*)?$/, '') : '';
             return searchBaseUrl;
         }
 
-        searchBaseUrl = '';
-        return searchBaseUrl;
-    }
-
-    function searchResultUrl(url) {
-        var target = String(url || '');
-        if (!target || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(target) || target.charAt(0) === '#') return target;
-        if (target.charAt(0) === '/') return target;
-        return searchDataBaseUrl() + target.replace(/^\/+/, '');
-    }
-
-    function makeSnippet(text, terms) {
-        var source = (text || '').replace(/\s+/g, ' ').trim();
-        if (!source) return '';
-
-        var lower = source.toLowerCase();
-        var matchIndex = -1;
-        terms.some(function(term) {
-            matchIndex = lower.indexOf(term);
-            return matchIndex !== -1;
-        });
-
-        if (matchIndex === -1) return source.slice(0, 150);
-
-        var sentenceStart = source.lastIndexOf('.', matchIndex);
-        var altStart = source.lastIndexOf('。', matchIndex);
-        sentenceStart = Math.max(sentenceStart, altStart);
-        var sentenceEnd = source.indexOf('.', matchIndex);
-        var altEnd = source.indexOf('。', matchIndex);
-        if (sentenceEnd === -1 || (altEnd !== -1 && altEnd < sentenceEnd)) sentenceEnd = altEnd;
-
-        var start = sentenceStart === -1 ? Math.max(0, matchIndex - 55) : sentenceStart + 1;
-        var end = sentenceEnd === -1 ? Math.min(source.length, matchIndex + 125) : sentenceEnd + 1;
-        var snippet = source.slice(start, end).trim();
-
-        if (snippet.length > 180) snippet = snippet.slice(0, 180).trim();
-        return (start > 0 ? '...' : '') + snippet + (end < source.length ? '...' : '');
-    }
-
-    function renderSearchEmpty(message) {
-        $('.search-results').html('<div class="search-empty">' + message + '</div>');
-    }
-
-    function searchSite(query) {
-        var terms = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
-        var $results = $('.search-results');
-        if (!terms.length) {
-            renderSearchEmpty('Type a keyword to search the site.');
-            return;
+        function searchResultUrl(url) {
+            var target = String(url || '');
+            if (!target || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(target) || target.charAt(0) === '#') return target;
+            if (target.charAt(0) === '/') return target;
+            return searchDataBaseUrl() + target.replace(/^\/+/, '');
         }
-        if (!searchIndexLoaded) {
-            loadSearchIndex().then(function() {
-                searchSite(currentSearchQuery());
+
+        function makeSnippet(text, terms) {
+            var source = (text || '').replace(/\s+/g, ' ').trim();
+            if (!source) return '';
+
+            var lower = source.toLowerCase();
+            var matchIndex = -1;
+            terms.some(function (term) {
+                matchIndex = lower.indexOf(term);
+                return matchIndex !== -1;
             });
-            return;
+            if (matchIndex === -1) return source.slice(0, 150);
+
+            var sentenceStart = Math.max(source.lastIndexOf('.', matchIndex), source.lastIndexOf('。', matchIndex));
+            var sentenceEnd = source.indexOf('.', matchIndex);
+            var altEnd = source.indexOf('。', matchIndex);
+            if (sentenceEnd === -1 || (altEnd !== -1 && altEnd < sentenceEnd)) sentenceEnd = altEnd;
+
+            var start = sentenceStart === -1 ? Math.max(0, matchIndex - 55) : sentenceStart + 1;
+            var end = sentenceEnd === -1 ? Math.min(source.length, matchIndex + 125) : sentenceEnd + 1;
+            var snippet = source.slice(start, end).trim();
+            if (snippet.length > 180) snippet = snippet.slice(0, 180).trim();
+            return (start > 0 ? '...' : '') + snippet + (end < source.length ? '...' : '');
         }
 
-        if (!searchItems.length) {
-            renderSearchEmpty('Search index is empty. Please rebuild the site.');
-            return;
+        function renderSearchEmpty(message) {
+            searchResults.innerHTML = '<div class="search-empty">' + message + '</div>';
         }
 
-        var matches = searchItems
-            .map(function(item) {
+        function searchSite(query) {
+            var terms = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+            if (!terms.length) {
+                renderSearchEmpty('Type a keyword to search the site.');
+                return;
+            }
+            if (!searchIndexLoaded) {
+                if (!searchRefreshPending) {
+                    searchRefreshPending = true;
+                    loadSearchIndex().then(function () {
+                        searchRefreshPending = false;
+                        searchSite(currentSearchQuery());
+                    });
+                }
+                return;
+            }
+            if (!searchItems.length) {
+                renderSearchEmpty('Search index is empty. Please rebuild the site.');
+                return;
+            }
+
+            var matches = searchItems.reduce(function (results, item) {
                 var title = (item.title || '').toLowerCase();
-                var body = (item.text || '').toLowerCase();
+                var text = (item.text || '').toLowerCase();
                 var meta = [item.type, item.date].join(' ').toLowerCase();
-                var haystack = [title, body, meta].join(' ');
-                var isMatch = terms.every(function(term) {
-                    return haystack.indexOf(term) !== -1;
-                });
-                var score = 0;
-                terms.forEach(function(term) {
+                var haystack = [title, text, meta].join(' ');
+                if (!terms.every(function (term) { return haystack.indexOf(term) !== -1; })) return results;
+
+                var score = 3;
+                terms.forEach(function (term) {
                     if (title.indexOf(term) !== -1) score += 6;
-                    if (body.indexOf(term) !== -1) score += 2;
+                    if (text.indexOf(term) !== -1) score += 2;
                     if (meta.indexOf(term) !== -1) score += 1;
                 });
-                if (isMatch) score += 3;
-                return $.extend({}, item, {
-                    isMatch: isMatch,
-                    score: score
-                });
-            })
-            .filter(function(item) { return item.isMatch; })
-            .sort(function(a, b) { return b.score - a.score; });
+                results.push({ item: item, score: score });
+                return results;
+            }, []).sort(function (a, b) { return b.score - a.score; });
 
-        if (!matches.length) {
-            renderSearchEmpty('No articles found for "' + $('<div>').text(query).html() + '".');
-            return;
+            if (!matches.length) {
+                renderSearchEmpty('No articles found for "' + escapeHtml(query) + '".');
+                return;
+            }
+
+            var resultList = matches.map(function (match) {
+                var item = match.item;
+                var snippet = makeSnippet(item.text, terms);
+                return '<li><a class="search-result" href="' + searchResultUrl(item.url) + '">' +
+                    '<span class="search-type">' + escapeHtml(item.type) + (item.date ? ' / ' + escapeHtml(item.date) : '') + '</span>' +
+                    '<span class="search-result-title">' + highlightTerm(item.title, terms) + '</span>' +
+                    '<span class="search-result-snippet">' + highlightTerm(snippet, terms) + '</span>' +
+                    '</a></li>';
+            }).join('');
+
+            searchResults.innerHTML = '<div class="search-count">' + matches.length +
+                (matches.length === 1 ? ' article' : ' articles') +
+                ' found</div><ul class="search-result-list">' + resultList + '</ul>';
         }
 
-        var resultList = matches.map(function(item) {
-            var snippet = makeSnippet(item.text, terms);
-            return [
-                '<li>',
-                    '<a class="search-result" href="' + searchResultUrl(item.url) + '">',
-                        '<span class="search-type">' + item.type + (item.date ? ' / ' + item.date : '') + '</span>',
-                        '<span class="search-result-title">' + highlightTerm(item.title, terms) + '</span>',
-                        '<span class="search-result-snippet">' + highlightTerm(snippet, terms) + '</span>',
-                    '</a>',
-                '</li>'
-            ].join('');
-        }).join('');
+        function refreshSearchResults() {
+            searchSite(currentSearchQuery());
+        }
 
-        $results.html([
-            '<div class="search-count">' + matches.length + (matches.length === 1 ? ' article' : ' articles') + ' found</div>',
-            '<ul class="search-result-list">',
-                resultList,
-            '</ul>'
-        ].join(''));
-    }
-
-    function refreshSearchResults() {
-        searchSite(currentSearchQuery());
-    }
-
-    function openSearch() {
-        $('.search-panel').addClass('is-open').attr('aria-hidden', 'false');
-        loadSearchIndex().then(function() {
+        function openSearch() {
+            searchPanel.classList.add('is-open');
+            searchPanel.setAttribute('aria-hidden', 'false');
             refreshSearchResults();
-        });
-        setTimeout(function() {
-            $('#site-search-input').trigger('focus');
-            refreshSearchResults();
-        }, 80);
-    }
+            setTimeout(function () { searchInput.focus(); }, 80);
+        }
 
-    function closeSearch() {
-        $('.search-panel').removeClass('is-open').attr('aria-hidden', 'true');
-    }
+        function closeSearch() {
+            searchPanel.classList.remove('is-open');
+            searchPanel.setAttribute('aria-hidden', 'true');
+        }
 
-    function openRewardModal(label, image) {
-        var $modal = $('.reward-modal');
-        var $img = $modal.find('.reward-qr');
-        $modal.find('.reward-method').text(label || '');
-        $img.off('load.reward error.reward').removeClass('is-missing').one('load.reward', function() {
-            $(this).removeClass('is-missing');
-        }).one('error.reward', function() {
-            $(this).addClass('is-missing');
-        }).attr({
-            src: image || '',
-            alt: (label || 'Reward') + ' QR code'
-        });
-        if (!image) $img.addClass('is-missing');
-        $modal.addClass('is-open').attr('aria-hidden', 'false');
-    }
+        function openRewardModal(label, image) {
+            var img = rewardModal.querySelector('.reward-qr');
+            rewardModal.querySelector('.reward-method').textContent = label || '';
+            img.classList.remove('is-missing');
+            img.onload = function () { img.classList.remove('is-missing'); };
+            img.onerror = function () { img.classList.add('is-missing'); };
+            img.src = image || '';
+            img.alt = (label || 'Reward') + ' QR code';
+            if (!image) img.classList.add('is-missing');
+            rewardModal.classList.add('is-open');
+            rewardModal.setAttribute('aria-hidden', 'false');
+        }
 
-    function closeRewardModal() {
-        $('.reward-modal').removeClass('is-open').attr('aria-hidden', 'true');
-    }
+        function closeRewardModal() {
+            rewardModal.classList.remove('is-open');
+            rewardModal.setAttribute('aria-hidden', 'true');
+        }
 
-    function closeContactTips(except) {
-        $('.social-contact.is-active').not(except || []).removeClass('is-active').attr('aria-expanded', 'false');
-    }
+        function closeContactTips(except) {
+            all('.social-contact.is-active').forEach(function (contact) {
+                if (contact === except) return;
+                contact.classList.remove('is-active');
+                contact.setAttribute('aria-expanded', 'false');
+            });
+        }
 
-    function clearContactTimer(contact) {
-        if (contact && contact._contactCloseTimer) {
+        function clearContactTimer(contact) {
+            if (!contact || !contact._contactCloseTimer) return;
             clearTimeout(contact._contactCloseTimer);
             contact._contactCloseTimer = null;
         }
-    }
 
-    function revealPage() {
-        $('.page, .side-card').removeClass('content-ready');
-        setTimeout(function() {
-            $('.page, .side-card').addClass('content-ready');
-            initMotion();
-        }, 40);
-    }
+        function initMotion() {
+            var cards = all('.article-card, .section-head');
+            cards.forEach(function (card) { card.classList.add('motion-watch'); });
+            if (!('IntersectionObserver' in window)) {
+                cards.forEach(function (card) { card.classList.add('is-visible'); });
+                return;
+            }
 
-    function initMotion() {
-        var cards = document.querySelectorAll('.article-card, .section-head');
-        cards.forEach(function(card) {
-            card.classList.add('motion-watch');
-        });
-
-        if (!('IntersectionObserver' in window)) {
-            cards.forEach(function(card) {
-                card.classList.add('is-visible');
-            });
-            return;
-        }
-
-        var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
                     entry.target.classList.add('is-visible');
                     observer.unobserve(entry.target);
-                }
+                });
+            }, { threshold: 0.14 });
+            cards.forEach(function (card) {
+                if (!card.classList.contains('is-visible')) observer.observe(card);
             });
-        }, { threshold: 0.14 });
-
-        cards.forEach(function(card) {
-            if (!card.classList.contains('is-visible')) observer.observe(card);
-        });
-    }
-
-    $(document).on('mousemove', '.article-card', function(e) {
-        var rect = this.getBoundingClientRect();
-        var x = ((e.clientX - rect.left) / rect.width) * 100;
-        var y = ((e.clientY - rect.top) / rect.height) * 100;
-        this.style.setProperty('--mouse-x', x + '%');
-        this.style.setProperty('--mouse-y', y + '%');
-    });
-
-    initStyleMode();
-    revealPage();
-    // 确保手机端导航栏默认关闭
-    closeMenus();
-
-    $('.style-toggle').click(function() {
-        setStyleMode(isAcademicStyle() ? 'current' : 'academic', true);
-    });
-
-    $('.theme-toggle').click(function() {
-        if (isAcademicStyle()) return;
-        var current = document.documentElement.getAttribute('data-theme') || 'light';
-        setTheme(current === 'dark' ? 'light' : 'dark');
-    });
-
-    $('.search-toggle').click(openSearch);
-    $('.search-close').click(closeSearch);
-    $(document).on('input search keyup change', '#site-search-input', refreshSearchResults);
-    $('.search-panel').click(function(e) {
-        if ($(e.target).is('.search-panel')) closeSearch();
-    });
-    $(document).on('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeSearch();
-            closeRewardModal();
-            closeContactTips();
         }
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-            e.preventDefault();
-            openSearch();
+
+        function revealPage() {
+            all('.page, .side-card').forEach(function (element) { element.classList.remove('content-ready'); });
+            setTimeout(function () {
+                all('.page, .side-card').forEach(function (element) { element.classList.add('content-ready'); });
+                initMotion();
+            }, 40);
         }
-    });
-    $(document).on('click', '.search-result', closeSearch);
 
-    $(document).on('click', '.footer-reward-button', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContactTips();
-        openRewardModal($(this).data('reward-label'), $(this).data('reward-image'));
-    });
-
-    $(document).on('click', '.reward-close', closeRewardModal);
-
-    $(document).on('click', '.reward-modal', function(e) {
-        if ($(e.target).is('.reward-modal')) closeRewardModal();
-    });
-
-    $(document).on('mouseenter', '.has-submenu', function() {
-        if (window.matchMedia && window.matchMedia('(max-width: 959px)').matches) return;
-        clearTimeout(this._submenuTimer);
-        $(this).addClass('submenu-open');
-    });
-    $(document).on('mouseleave', '.has-submenu', function() {
-        var item = this;
-        item._submenuTimer = setTimeout(function() {
-            $(item).removeClass('submenu-open');
-        }, 120);
-    });
-
-    function closeMenus() {
-        $(".header_wrap").removeClass("menus-open").addClass("menus-close");
-        $(".has-submenu").removeClass("submenu-open");
-        $(".submenu-toggle").attr("aria-expanded", "false");
-        if (document.activeElement && $(document.activeElement).closest(".menus_items").length) {
-            document.activeElement.blur();
+        function closeMenus() {
+            var header = document.querySelector('.header_wrap');
+            header.classList.remove('menus-open');
+            header.classList.add('menus-close');
+            all('.has-submenu').forEach(function (item) { item.classList.remove('submenu-open'); });
+            all('.submenu-toggle').forEach(function (toggle) { toggle.setAttribute('aria-expanded', 'false'); });
+            if (document.activeElement && document.activeElement.closest('.menus_items')) document.activeElement.blur();
         }
-    }
 
-    // menu
-    $(".menus_icon").click(function () {
-        if ($(".header_wrap").hasClass("menus-open")) {
+        function closeAuthorLinks() {
+            all('.author-links').forEach(function (links) {
+                links.classList.remove('is-open');
+                links.classList.add('is-close');
+            });
+        }
+
+        function currentCategorySlug() {
+            return (window.location.hash || '').replace(/^#/, '').toLowerCase() || 'all';
+        }
+
+        function scrollActiveCategoryLink(activeLink) {
+            var nav = activeLink && activeLink.closest('.content-category-nav');
+            if (!nav) return;
+            var style = window.getComputedStyle(nav);
+            var paddingLeft = parseFloat(style.paddingLeft) || 0;
+            var paddingRight = parseFloat(style.paddingRight) || 0;
+            var visibleLeft = nav.scrollLeft + paddingLeft + 8;
+            var visibleRight = nav.scrollLeft + nav.clientWidth - paddingRight - 8;
+            var linkLeft = activeLink.offsetLeft;
+            var linkRight = linkLeft + activeLink.offsetWidth;
+            var nextScroll = nav.scrollLeft;
+
+            if (linkLeft < visibleLeft) nextScroll = linkLeft - paddingLeft - 8;
+            else if (linkRight > visibleRight) nextScroll = linkRight - nav.clientWidth + paddingRight + 8;
+
+            nextScroll = Math.max(0, Math.min(nextScroll, nav.scrollWidth - nav.clientWidth));
+            if (Math.abs(nextScroll - nav.scrollLeft) < 1) return;
+            nav.scrollTo ? nav.scrollTo({ left: nextScroll, behavior: 'smooth' }) : (nav.scrollLeft = nextScroll);
+        }
+
+        function setCategoryFilter(slug) {
+            var container = document.getElementById('article-grid-container');
+            if (!container) return;
+            var activeSlug = slug || currentCategorySlug();
+            var showAll = activeSlug === 'all';
+            var visibleCount = 0;
+
+            all('.article-card', container).forEach(function (card) {
+                var isVisible = showAll || card.dataset.categorySlug === activeSlug;
+                if (card.hidden === isVisible) card.hidden = !isVisible;
+                if (isVisible) visibleCount += 1;
+            });
+            all('.content-category-link').forEach(function (link) {
+                link.classList.toggle('is-active', (link.dataset.categoryFilter || 'all') === activeSlug);
+            });
+
+            var activeLink = document.querySelector('.content-category-link.is-active');
+            if (activeLink && window.matchMedia('(max-width: 959px)').matches) scrollActiveCategoryLink(activeLink);
+            var empty = document.getElementById('article-filter-empty');
+            if (empty && empty.hidden !== (visibleCount > 0)) empty.hidden = visibleCount > 0;
+        }
+
+        function initArticleCards() {
+            var container = document.getElementById('article-grid-container');
+            if (!container) return;
+            var cards = Array.from(container.children);
+            if (!cards.length) return;
+            var sortedCards = cards.slice().sort(function (a, b) {
+                return Date.parse(b.dataset.time) - Date.parse(a.dataset.time);
+            });
+            if (sortedCards.some(function (card, index) { return card !== cards[index]; })) {
+                var fragment = document.createDocumentFragment();
+                sortedCards.forEach(function (card) { fragment.appendChild(card); });
+                container.appendChild(fragment);
+            }
+            setCategoryFilter(currentCategorySlug());
+        }
+
+        function scrollTo(target, offset) {
+            var top = typeof target === 'number' ? target : target.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: Math.max(0, top - (offset || 0)), behavior: 'smooth' });
+        }
+
+        var navigationController = null;
+        function finishNavigation() {
             closeMenus();
-        } else {
-            $(".has-submenu").removeClass("submenu-open");
-            $(".submenu-toggle").attr("aria-expanded", "false");
-            $(".header_wrap").removeClass("menus-close").addClass("menus-open")
-        }
-    })
-
-    $(".submenu-toggle").click(function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var $item = $(this).closest(".has-submenu");
-        var shouldOpen = !$item.hasClass("submenu-open");
-        $item.toggleClass("submenu-open", shouldOpen);
-        $(this).attr("aria-expanded", shouldOpen ? "true" : "false");
-    })
-
-    $(".m-social-links").click(function () {
-        if ($(".author-links").hasClass("is-open")) {
-            $(".author-links").removeClass("is-open").addClass("is-close")
-        } else {
-            $(".author-links").removeClass("is-close").addClass("is-open")
-        }
-    })
-
-    $(document).on('mousedown mouseup click', '.social-contact-tip', function(e) {
-        e.stopPropagation();
-    });
-
-    $(document).on('click', '.social-contact', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if ($(e.target).closest('.social-contact-tip').length) return;
-        clearContactTimer(this);
-        var $button = $(this);
-        var shouldOpen = !$button.hasClass('is-active');
-        closeContactTips(this);
-        $button.toggleClass('is-active', shouldOpen).attr('aria-expanded', shouldOpen ? 'true' : 'false');
-    });
-
-    $(document).on('mouseenter', '.social-contact', function() {
-        clearContactTimer(this);
-    });
-
-    $(document).on('mouseleave focusout', '.social-contact', function() {
-        var contact = this;
-        clearContactTimer(contact);
-        contact._contactCloseTimer = setTimeout(function() {
-            $(contact).removeClass('is-active').attr('aria-expanded', 'false');
-            contact._contactCloseTimer = null;
-        }, 160);
-    });
-
-    $(document).click(function(e){
-        var target = $(e.target);
-        closeContactTips();
-        if(target.closest(".author-links").length != 0) return;
-        $(".author-links").removeClass("is-open").addClass("is-close")
-        if((target.closest(".menus_icon").length != 0) || (target.closest(".menus_items").length != 0)) return;
-        closeMenus();
-    })
-
-    $(document).on('touchstart pointerdown', '.article-card', function() {
-        closeMenus();
-    });
-
-    // 显示 cdtop
-    $(document).ready(function ($) {
-        var offset = 100,
-            scroll_top_duration = 700,
-            $back_to_top = $('.nav-wrap');
-
-        $(window).scroll(function () {
-            ($(this).scrollTop() > offset) ? $back_to_top.addClass('is-visible') : $back_to_top.removeClass('is-visible');
-        });
-
-        $(".cd-top").on('click', function (event) {
-            event.preventDefault();
-            $('body,html').animate({
-                scrollTop: 0,
-            }, scroll_top_duration);
-        });
-    });
-
-    function currentCategorySlug() {
-        var slug = (window.location.hash || '').replace(/^#/, '').toLowerCase();
-        return slug || 'all';
-    }
-
-    function scrollActiveCategoryLink(activeLink) {
-        var nav = activeLink && activeLink.closest('.content-category-nav');
-        if (!nav) return;
-
-        var style = window.getComputedStyle ? window.getComputedStyle(nav) : null;
-        var paddingLeft = style ? parseFloat(style.paddingLeft) || 0 : 0;
-        var paddingRight = style ? parseFloat(style.paddingRight) || 0 : 0;
-        var safety = 8;
-        var visibleLeft = nav.scrollLeft + paddingLeft + safety;
-        var visibleRight = nav.scrollLeft + nav.clientWidth - paddingRight - safety;
-        var linkLeft = activeLink.offsetLeft;
-        var linkRight = linkLeft + activeLink.offsetWidth;
-        var nextScroll = nav.scrollLeft;
-
-        if (linkLeft < visibleLeft) {
-            nextScroll = linkLeft - paddingLeft - safety;
-        } else if (linkRight > visibleRight) {
-            nextScroll = linkRight - nav.clientWidth + paddingRight + safety;
-        }
-
-        nextScroll = Math.max(0, Math.min(nextScroll, nav.scrollWidth - nav.clientWidth));
-        if (Math.abs(nextScroll - nav.scrollLeft) < 1) return;
-
-        if (nav.scrollTo) {
-            nav.scrollTo({
-                left: nextScroll,
-                behavior: 'smooth'
-            });
-        } else {
-            nav.scrollLeft = nextScroll;
-        }
-    }
-
-    function setCategoryFilter(slug) {
-        var container = document.getElementById('article-grid-container');
-        if (!container) return;
-
-        var activeSlug = slug || currentCategorySlug();
-        var showAll = !activeSlug || activeSlug === 'all';
-        var visibleCount = 0;
-        var cards = Array.from(container.querySelectorAll('.article-card'));
-
-        cards.forEach(function(card) {
-            var isVisible = showAll || card.dataset.categorySlug === activeSlug;
-            card.hidden = !isVisible;
-            if (isVisible) visibleCount += 1;
-        });
-
-        $('.content-category-nav .content-category-link')
-            .removeClass('is-active')
-            .filter(function() {
-                return ($(this).data('category-filter') || 'all') === activeSlug;
-            })
-            .addClass('is-active');
-
-        var activeLink = document.querySelector('.content-category-nav .content-category-link.is-active');
-        if (activeLink && window.matchMedia && window.matchMedia('(max-width: 959px)').matches) {
-            scrollActiveCategoryLink(activeLink);
-        }
-
-        var empty = document.getElementById('article-filter-empty');
-        if (empty) empty.hidden = visibleCount > 0;
-    }
-
-    function scrollToArticleGrid() {
-        var target = $('#article-grid-container');
-        if (!target.length) return;
-        $('html,body').animate({
-            scrollTop: Math.max(0, target.offset().top - 120)
-        }, 450);
-    }
-
-    // ========== 文章卡片初始化函数 ==========
-    function initArticleCards() {
-        var container = document.getElementById('article-grid-container');
-        if (!container) return;
-        
-        // 如果已经排序过，先移除标记（允许 PJAX 后重新排序）
-        var cards = Array.from(container.children);
-        if (cards.length === 0) return;
-        
-        // 按时间排序（最新在前）
-        cards.sort(function(a, b) {
-            return new Date(b.dataset.time) - new Date(a.dataset.time);
-        });
-        
-        cards.forEach(function(card) {
-            container.appendChild(card);
-        });
-
-        setCategoryFilter(currentCategorySlug());
-    }
-
-    $(document).on('click', '.content-category-nav a[data-category-filter]', function(event) {
-        var link = this;
-        var linkUrl = new URL(link.href, window.location.href);
-        var samePage = linkUrl.origin === window.location.origin && linkUrl.pathname === window.location.pathname;
-
-        if (!samePage || !link.closest('.content-category-nav') || !document.getElementById('article-grid-container')) return;
-
-        event.preventDefault();
-        var slug = ($(link).data('category-filter') || 'all').toString();
-        history.pushState(null, '', linkUrl.pathname + (slug === 'all' ? '#all' : '#' + slug));
-        setCategoryFilter(slug);
-        scrollToArticleGrid();
-    });
-
-    $(window).on('hashchange', function() {
-        setCategoryFilter(currentCategorySlug());
-    });
-
-    // pjax
-    $(document).pjax('a[target!=_blank]','.page', {
-        fragment: '.page',
-        timeout: 5000
-    });
-    $(document).on({
-        'pjax:click': function() {
-            $('body,html').animate({
-                scrollTop: 0,
-            }, 700);
-        },
-        'pjax:end': function() {
-            if ($(".header_wrap").hasClass("menus-open")) {
-                closeMenus();
-            }
-            if ($(".author-links").hasClass("is-open")) {
-                $(".author-links").removeClass("is-open").addClass("is-close")
-            }
-            // ========== PJAX 加载完成后初始化卡片 ==========
-            setTimeout(function() {
-                initArticleCards();
-                setCategoryFilter(currentCategorySlug());
-                syncStyleToggle(isAcademicStyle() ? 'academic' : 'current');
-            }, 100);
+            closeAuthorLinks();
+            initArticleCards();
+            syncStyleToggle(isAcademicStyle() ? 'academic' : 'current');
             revealPage();
+            document.dispatchEvent(new CustomEvent('pjax:end'));
         }
-    });
 
-    // smooth scroll
-    $(function () {
-        $('a[href*=\\#]:not([href=\\#])').click(function () {
-            if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
-                var target = $(this.hash);
-                target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
-                if (target.length) {
-                    $('html,body').animate({
-                        scrollTop: target.offset().top
-                    }, 700);
-                    return false;
-                }
+        function navigate(url, pushState) {
+            if (navigationController) navigationController.abort();
+            navigationController = 'AbortController' in window ? new AbortController() : null;
+            document.dispatchEvent(new CustomEvent('pjax:click'));
+            scrollTo(0);
+
+            var options = { headers: { 'X-PJAX': 'true', 'X-PJAX-Container': '.page' } };
+            if (navigationController) options.signal = navigationController.signal;
+            fetch(url, options)
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Navigation request failed');
+                    return response.text();
+                })
+                .then(function (html) {
+                    var nextDocument = new DOMParser().parseFromString(html, 'text/html');
+                    var nextPage = nextDocument.querySelector('.page');
+                    var currentPage = document.querySelector('.page');
+                    if (!nextPage || !currentPage) throw new Error('PJAX fragment missing');
+                    currentPage.replaceWith(document.importNode(nextPage, true));
+                    document.title = nextDocument.title;
+                    if (pushState) history.pushState(null, '', url);
+                    finishNavigation();
+                })
+                .catch(function (error) {
+                    if (error.name !== 'AbortError') window.location.href = url;
+                });
+        }
+
+        initStyleMode();
+        revealPage();
+        closeMenus();
+        initArticleCards();
+
+        delegate('mousemove', '.article-card', function (event) {
+            var card = this;
+            card._pointerX = event.clientX;
+            card._pointerY = event.clientY;
+            if (card._pointerFrame) return;
+            card._pointerFrame = scheduleFrame(function () {
+                var rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', ((card._pointerX - rect.left) / rect.width) * 100 + '%');
+                card.style.setProperty('--mouse-y', ((card._pointerY - rect.top) / rect.height) * 100 + '%');
+                card._pointerFrame = null;
+            });
+        });
+
+        delegate('click', '.style-toggle', function () {
+            setStyleMode(isAcademicStyle() ? 'current' : 'academic', true);
+        });
+        delegate('click', '.theme-toggle', function () {
+            if (isAcademicStyle()) return;
+            setTheme((root.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark');
+        });
+        delegate('click', '.search-toggle', openSearch);
+        delegate('click', '.search-close, .search-result', closeSearch);
+        ['input', 'search', 'change'].forEach(function (eventName) {
+            searchInput.addEventListener(eventName, refreshSearchResults);
+        });
+        searchPanel.addEventListener('click', function (event) {
+            if (event.target === searchPanel) closeSearch();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeSearch();
+                closeRewardModal();
+                closeContactTips();
+            }
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                openSearch();
             }
         });
+
+        delegate('click', '.footer-reward-button', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            closeContactTips();
+            openRewardModal(this.dataset.rewardLabel, this.dataset.rewardImage);
+        });
+        delegate('click', '.reward-close', closeRewardModal);
+        rewardModal.addEventListener('click', function (event) {
+            if (event.target === rewardModal) closeRewardModal();
+        });
+
+        all('.has-submenu').forEach(function (item) {
+            item.addEventListener('mouseenter', function () {
+                if (window.matchMedia('(max-width: 959px)').matches) return;
+                clearTimeout(item._submenuTimer);
+                item.classList.add('submenu-open');
+            });
+            item.addEventListener('mouseleave', function () {
+                item._submenuTimer = setTimeout(function () { item.classList.remove('submenu-open'); }, 120);
+            });
+        });
+
+        delegate('click', '.menus_icon', function () {
+            var header = document.querySelector('.header_wrap');
+            if (header.classList.contains('menus-open')) closeMenus();
+            else {
+                all('.has-submenu').forEach(function (item) { item.classList.remove('submenu-open'); });
+                all('.submenu-toggle').forEach(function (toggle) { toggle.setAttribute('aria-expanded', 'false'); });
+                header.classList.remove('menus-close');
+                header.classList.add('menus-open');
+            }
+        });
+        delegate('click', '.submenu-toggle', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var item = this.closest('.has-submenu');
+            var shouldOpen = !item.classList.contains('submenu-open');
+            item.classList.toggle('submenu-open', shouldOpen);
+            this.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        });
+        delegate('click', '.m-social-links', function () {
+            var links = this.closest('.author-links');
+            var shouldOpen = !links.classList.contains('is-open');
+            links.classList.toggle('is-open', shouldOpen);
+            links.classList.toggle('is-close', !shouldOpen);
+        });
+
+        delegate('click', '.social-contact', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.target.closest('.social-contact-tip')) return;
+            clearContactTimer(this);
+            var shouldOpen = !this.classList.contains('is-active');
+            closeContactTips(this);
+            this.classList.toggle('is-active', shouldOpen);
+            this.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        });
+        all('.social-contact').forEach(function (contact) {
+            contact.addEventListener('mouseenter', function () { clearContactTimer(contact); });
+            ['mouseleave', 'focusout'].forEach(function (eventName) {
+                contact.addEventListener(eventName, function () {
+                    clearContactTimer(contact);
+                    contact._contactCloseTimer = setTimeout(function () {
+                        contact.classList.remove('is-active');
+                        contact.setAttribute('aria-expanded', 'false');
+                        contact._contactCloseTimer = null;
+                    }, 160);
+                });
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('.social-contact')) return;
+            closeContactTips();
+            if (event.target.closest('.author-links')) return;
+            closeAuthorLinks();
+            if (event.target.closest('.menus_icon, .menus_items')) return;
+            closeMenus();
+        });
+
+        delegate(window.PointerEvent ? 'pointerdown' : 'touchstart', '.article-card', closeMenus, { passive: true });
+
+        var backToTopFrame = null;
+        var backToTop = document.querySelector('.nav-wrap');
+        window.addEventListener('scroll', function () {
+            if (backToTopFrame) return;
+            backToTopFrame = scheduleFrame(function () {
+                backToTop.classList.toggle('is-visible', window.scrollY > 100);
+                backToTopFrame = null;
+            });
+        }, { passive: true });
+        delegate('click', '.cd-top', function (event) {
+            event.preventDefault();
+            scrollTo(0);
+        });
+
+        delegate('click', '.content-category-link[data-category-filter]', function (event) {
+            var url = new URL(this.href, window.location.href);
+            if (url.origin !== location.origin || url.pathname !== location.pathname || !document.getElementById('article-grid-container')) return;
+            event.preventDefault();
+            var slug = this.dataset.categoryFilter || 'all';
+            history.pushState(null, '', url.pathname + (slug === 'all' ? '#all' : '#' + slug));
+            setCategoryFilter(slug);
+            scrollTo(document.getElementById('article-grid-container'), 120);
+        });
+        window.addEventListener('hashchange', function () { setCategoryFilter(currentCategorySlug()); });
+
+        document.addEventListener('click', function (event) {
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            var link = event.target.closest('a[href]');
+            if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+            var url = new URL(link.href, location.href);
+            if (url.origin !== location.origin) return;
+
+            if (url.pathname === location.pathname && url.search === location.search && url.hash) {
+                var target = document.getElementById(decodeURIComponent(url.hash.slice(1))) || document.querySelector('[name="' + decodeURIComponent(url.hash.slice(1)) + '"]');
+                if (target) {
+                    event.preventDefault();
+                    history.pushState(null, '', url.href);
+                    scrollTo(target);
+                }
+                return;
+            }
+
+            event.preventDefault();
+            navigate(url.href, true);
+        });
+        window.addEventListener('popstate', function () { navigate(location.href, false); });
     });
-
-    // ========== 页面首次加载时初始化卡片 ==========
-    initArticleCards();
-
-})
+})();
