@@ -408,6 +408,7 @@
         }
 
         var navigationController = null;
+        var navigationSequence = 0;
         function finishNavigation() {
             closeMenus();
             closeAuthorLinks();
@@ -418,6 +419,7 @@
         }
 
         function navigate(url, pushState) {
+            var sequence = ++navigationSequence;
             if (navigationController) navigationController.abort();
             navigationController = 'AbortController' in window ? new AbortController() : null;
             document.dispatchEvent(new CustomEvent('pjax:click'));
@@ -428,20 +430,26 @@
             fetch(url, options)
                 .then(function (response) {
                     if (!response.ok) throw new Error('Navigation request failed');
-                    return response.text();
+                    return response.text().then(function (html) {
+                        return { html: html, url: response.url || url };
+                    });
                 })
-                .then(function (html) {
-                    var nextDocument = new DOMParser().parseFromString(html, 'text/html');
+                .then(function (result) {
+                    if (sequence !== navigationSequence) return;
+                    var nextDocument = new DOMParser().parseFromString(result.html, 'text/html');
                     var nextPage = nextDocument.querySelector('.page');
                     var currentPage = document.querySelector('.page');
                     if (!nextPage || !currentPage) throw new Error('PJAX fragment missing');
                     currentPage.replaceWith(document.importNode(nextPage, true));
                     document.title = nextDocument.title;
-                    if (pushState) history.pushState(null, '', url);
+                    if (pushState) history.pushState(null, '', result.url);
+                    navigationController = null;
                     finishNavigation();
                 })
                 .catch(function (error) {
-                    if (error.name !== 'AbortError') window.location.href = url;
+                    if (sequence !== navigationSequence || error.name === 'AbortError') return;
+                    navigationController = null;
+                    window.location.href = url;
                 });
         }
 
