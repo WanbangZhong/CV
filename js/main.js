@@ -340,8 +340,17 @@
             });
         }
 
+        function decodeUrlComponent(value) {
+            try {
+                return decodeURIComponent(value);
+            } catch (error) {
+                return value;
+            }
+        }
+
         function currentCategorySlug() {
-            return (window.location.hash || '').replace(/^#/, '').toLowerCase() || 'all';
+            var hash = (window.location.hash || '').replace(/^#/, '');
+            return decodeUrlComponent(hash).toLowerCase() || 'all';
         }
 
         function scrollActiveCategoryLink(activeLink) {
@@ -431,7 +440,9 @@
                 .then(function (response) {
                     if (!response.ok) throw new Error('Navigation request failed');
                     return response.text().then(function (html) {
-                        return { html: html, url: response.url || url };
+                        var finalUrl = new URL(response.url || url, window.location.href);
+                        finalUrl.hash = new URL(url, window.location.href).hash;
+                        return { html: html, url: finalUrl.href };
                     });
                 })
                 .then(function (result) {
@@ -614,7 +625,8 @@
             if (url.origin !== location.origin) return;
 
             if (url.pathname === location.pathname && url.search === location.search && url.hash) {
-                var target = document.getElementById(decodeURIComponent(url.hash.slice(1))) || document.querySelector('[name="' + decodeURIComponent(url.hash.slice(1)) + '"]');
+                var hashTarget = decodeUrlComponent(url.hash.slice(1));
+                var target = document.getElementById(hashTarget) || document.querySelector('[name="' + hashTarget + '"]');
                 if (target) {
                     event.preventDefault();
                     history.pushState(null, '', url.href);
